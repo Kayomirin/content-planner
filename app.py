@@ -31,25 +31,25 @@ st.title("🔥 Контент-планнер для LoyalFans")
 st.markdown("""
 <style>
     .stApp {
-        background: linear-gradient(135deg, #ecfccb 0%, #d9f99d 100%);
+        background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
     }
     .stButton > button {
         background-color: transparent;
-        border: 2px solid #65a30d;
-        color: #65a30d;
+        border: 2px solid #7c3aed;
+        color: #7c3aed;
         border-radius: 12px;
         padding: 0.6rem 1.2rem;
         font-weight: 600;
     }
     .stButton > button:hover {
-        background-color: #65a30d;
+        background-color: #7c3aed;
         color: white;
     }
     div[data-testid="stVerticalBlock"] > div {
         background: white;
         border-radius: 16px;
         padding: 1rem;
-        box-shadow: 0 4px 12px rgba(101, 163, 13, 0.08);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
     }
 </style>
 """, unsafe_allow_html=True)
