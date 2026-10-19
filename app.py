@@ -38,62 +38,43 @@ st.markdown("""
 if "result" not in st.session_state:
     st.session_state.result = None
 for k, d in [("posts", 5), ("videos", 2), ("audios", 1)]:
-    if k not in st.session_state:
-        st.session_state[k] = d
-
-with st.sidebar:
-    st.header("API")
-    api_key = st.text_input("API ключ", type="password")
-    if not api_key and "XAI_API_KEY" in st.secrets:
-        api_key = st.secrets["XAI_API_KEY"]
-    provider = st.selectbox("Провайдер", ["Grok (xAI)", "OpenAI"])
-    model = st.text_input("Модель", value="grok-4.7" if "Grok" in provider else "gpt-4o")
-
-def get_client():
-    if not api_key:
-        st.error("Введи API-ключ")
-        return None
-    if "Grok" in provider:
-        return OpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
-    return OpenAI(api_key=api_key)
-
-def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days):
-    client = get_client()
-    if not client:
-        return None
-    fetish_str = ", ".join(fetishes) if fetishes else "any"
-    prompt = PERSONA + "\nПериод: " + period + "\nФетиши: " + fetish_str + "\n\n"
-    prompt += "## ПОСТЫ\nРовно " + str(n_posts) + " постов.\n"
-    prompt += "## ВИДЕО\nРовно " + str(n_videos) + " видео. У каждого: Название, Описание (чтобы захотелось купить), Текст для озвучки, Перевод, 10 хештегов.\n"
-    prompt += "## АУДИО\nРовно " + str(n_audios) + " аудио. У каждого: Название, Описание (чтобы захотелось купить), Текст, Перевод, 10 хештегов.\n"
-    prompt += "## РАССЫЛКИ\nНа " + str(n_mailing_days) + " дней. Каждый день 4 сообщения с {name}:\n"
-    prompt += "1. MORNING HOOK\n2. DAYTIME WARM-UP\n3. EVENING PPV\n4. MORNING BUMP\n"
-    prompt += "У каждого английский + перевод."
-    try:
-        r = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.85,
-            max_tokens=7000
-        )
-        return r.choices[0].message.content
-    except Exception as e:
-        st.error(str(e))
-        return None
-
-def counter(label, key, min_v=0, max_v=50):
-    c1, c2, c3, c4 = st.columns([2.5, 1, 1, 1])
-    with c1:
-        st.markdown(f"**{label}**")
-    with c2:
-        if st.button("−", key=f"m_{key}"):
-            st.session_state[key] = max(min_v, st.session_state[key] - 1)
-    with c3:
-        st.markdown(f"<div style='text-align:center;font-size:1.4rem;padding-top:4px'>{st.session_state[key]}</div>", unsafe_allow_html=True)
-    with c4:
-        if st.button("+", key=f"p_{key}"):
-            st.session_state[key] = min(max_v, st.session_state[key] + 1)
-    return st.session_state[key]
+   if st.session_state.result:
+    st.divider()
+    st.subheader("Результат")
+    text = st.session_state.result
+    
+    sections = {"ПОСТЫ": "", "ВИДЕО": "", "АУДИО": "", "РАССЫЛКИ": ""}
+    current = None
+    
+    for line in text.split("\n"):
+        u = line.upper().strip()
+        if any(x in u for x in ["ПОСТЫ", "POSTS", "### ПОСТ"]):
+            current = "ПОСТЫ"
+            continue
+        elif any(x in u for x in ["ВИДЕО", "VIDEO", "### ВИДЕО"]):
+            current = "ВИДЕО"
+            continue
+        elif any(x in u for x in ["АУДИО", "AUDIO", "### АУДИО"]):
+            current = "АУДИО"
+            continue
+        elif any(x in u for x in ["РАССЫЛКИ", "MAIL", "PPV", "### РАССЫЛ"]):
+            current = "РАССЫЛКИ"
+            continue
+        if current:
+            sections[current] += line + "\n"
+    
+    t1, t2, t3, t4 = st.tabs(["Посты", "Видео", "Аудио", "Рассылки"])
+    with t1:
+        st.markdown(sections["ПОСТЫ"].strip() or "Нет постов")
+    with t2:
+        st.markdown(sections["ВИДЕО"].strip() or "Нет видео")
+    with t3:
+        st.markdown(sections["АУДИО"].strip() or "Нет аудио")
+    with t4:
+        st.markdown(sections["РАССЫЛКИ"].strip() or "Нет рассылок")
+    
+    with st.expander("Весь текст"):
+        st.code(text)
 
 st.subheader("Настройки")
 n_posts = counter("Посты", "posts", 0, 30)
