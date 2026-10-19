@@ -10,11 +10,20 @@ PERSONA = """
 """
 
 DEFAULT_FETISHES = [
-    "Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Pantyhose Fetish",
-    "Fishnets", "High Heels", "Body Worship", "Ass Worship", "Breast Worship",
-    "Femdom", "Soft Domme", "Hard Findom", "Financial Domination", "SPH (Small Penis Humiliation)",
-    "Humiliation", "JOI (Jerk Off Instruction)", "CEI (Cum Eating Instruction)", "Tease & Denial",
-    "Pegging", "Chastity & Keyholder", "Giantess Fetish", "Facesitting & Squashing"
+    "Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
+    "Pantyhose Fetish", "Fishnets", "High Heels", "Body Worship", "Ass Worship",
+    "Breast Worship", "Armpit Fetish", "Hair Worship", "Hair Brushing", "Femdom",
+    "Soft Domme", "Hard Findom", "Financial Domination", "Paypig Control",
+    "Total Power Exchange (TPE)", "Contracts & Control", "Mind Games", "Hypnosis",
+    "Correction Training", "Spanking", "Humiliation", "Objectification",
+    "SPH (Small Penis Humiliation)", "Cuckolding", "Sissification", "Slutification",
+    "Beta Loser Degradation", "Virgin Humiliation", "Gooner Control",
+    "JOI (Jerk Off Instruction)", "CEI (Cum Eating Instruction)", "Tease & Denial",
+    "Pegging", "Toy Control", "Puppy Play", "GFE (Girlfriend Experience)",
+    "Bratty Girl", "Chastity & Keyholder", "Techdom & Anydesk", "Giantess Fetish",
+    "Spitting & Saliva Fetish", "Facesitting & Squashing", "Farts Fetish",
+    "Tummy Fetish", "Wedgie", "Worn Clothes & Used Panties", "Denim & Tight Jeans",
+    "Latex & Leather Fetish", "Gloves Fetish"
 ]
 
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="wide")
