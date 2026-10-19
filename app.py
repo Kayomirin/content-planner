@@ -57,107 +57,41 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days):
 
 ## ПОСТЫ
 Ровно {n_posts} постов. Каждый начинай с ### Пост N
+Английский текст + **Перевод:** русский
 
 ## ВИДЕО
 Ровно {n_videos} видео. Каждый начинай с ### Видео N
-У каждого: Описание сцены + Текст для озвучки + Перевод
+Описание сцены + Текст для озвучки + **Перевод:**
 
 ## АУДИО
 Ровно {n_audios} аудио. Каждый начинай с ### Аудио N
+Английский + **Перевод:**
 
 ## РАССЫЛКИ
-На {n_mailing_days} дней. Каждый день строго так:
+На {n_mailing_days} дней. Для каждого дня сделай 4 сообщения строго в таком порядке:
 
 ### День N
-**MORNING HOOK**
+
+**1. MORNING HOOK (бесплатно)**
 [английский текст с {{name}}]
 **Перевод:** ...
+Суть: разбудить базу, задать вопрос, заставить оправдываться. Высокомерно-игривый тон. Без прямой просьбы денег.
 
-**EVENING PPV**
+**2. DAYTIME WARM-UP (бесплатно)**
 [английский текст с {{name}}]
 **Перевод:** ...
+Суть: создать интригу и дефицит. Намекнуть на горячий контент, который они пока не заслужили. Tease & Denial.
 
-MORNING HOOK — бесплатный крючок (оправдания, ожидание, сомнения).
-EVENING PPV — дразнящий текст под locked PPV.
-Обязательно {{name}} в каждом сообщении.
-"""
-    try:
-        r = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.85,
-            max_tokens=7000
-        )
-        return r.choices[0].message.content
-    except Exception as e:
-        st.error(str(e))
-        return None
+**3. EVENING PPV (платно)**
+[английский текст с {{name}}]
+**Перевод:** ...
+Суть: текст под locked-сообщение. Фрустрация + жёсткий призыв купить. «Разблокируй, чтобы доказать, что ты хороший мальчик».
 
-# ========== ИНТЕРФЕЙС ==========
-st.subheader("Настройки")
+**4. MORNING BUMP (бесплатно, на следующий день)**
+[английский текст с {{name}}]
+**Перевод:** ...
+Суть: короткое сообщение тем, кто не купил вчера. Лёгкая насмешка над нерешительностью. «Так и будешь пялиться на размытый экран?»
 
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
-with c2:
-    n_posts = st.number_input("Постов всего", 0, 50, 5)
-with c3:
-    n_videos = st.number_input("Видео всего", 0, 20, 2)
-with c4:
-    n_audios = st.number_input("Аудио всего", 0, 10, 1)
-
-n_mailing_days = st.slider("Дней рассылок (2 сообщения в день)", 0, 30, 7)
-fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["JOI (Jerk Off Instruction)", "Tease & Denial"])
-
-if st.button("🚀 Сгенерировать", type="primary", use_container_width=True):
-    with st.spinner("Генерирую..."):
-        st.session_state.result = generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days)
-
-# ========== ВЫВОД В КАРТОЧКАХ ==========
-if st.session_state.result:
-    st.divider()
-    st.subheader("Результат")
-    
-    text = st.session_state.result
-    
-    # Простое разбиение по заголовкам
-    sections = {"ПОСТЫ": "", "ВИДЕО": "", "АУДИО": "", "РАССЫЛКИ": ""}
-    current = None
-    for line in text.split("\n"):
-        upper = line.upper()
-        if "ПОСТЫ" in upper or "POSTS" in upper:
-            current = "ПОСТЫ"
-        elif "ВИДЕО" in upper or "VIDEO" in upper:
-            current = "ВИДЕО"
-        elif "АУДИО" in upper or "AUDIO" in upper:
-            current = "АУДИО"
-        elif "РАССЫЛКИ" in upper or "MAIL" in upper or "PPV" in upper:
-            current = "РАССЫЛКИ"
-        elif current:
-            sections[current] += line + "\n"
-    
-    tab1, tab2, tab3, tab4 = st.tabs(["📝 Посты", "🎬 Видео", "🎧 Аудио", "💌 Рассылки"])
-    
-    with tab1:
-        if sections["ПОСТЫ"].strip():
-            st.markdown(sections["ПОСТЫ"])
-        else:
-            st.info("Нет постов")
-    with tab2:
-        if sections["ВИДЕО"].strip():
-            st.markdown(sections["ВИДЕО"])
-        else:
-            st.info("Нет видео")
-    with tab3:
-        if sections["АУДИО"].strip():
-            st.markdown(sections["АУДИО"])
-        else:
-            st.info("Нет аудио")
-    with tab4:
-        if sections["РАССЫЛКИ"].strip():
-            st.markdown(sections["РАССЫЛКИ"])
-        else:
-            st.info("Нет рассылок")
-    
-    with st.expander("Весь текст целиком (для копирования)"):
-        st.code(text)
+Правила для рассылок:
+- Обязательно {{name}} в каждом сообщении.
+- Тон Soft Domme. При жёстких фетишах добавляй 
