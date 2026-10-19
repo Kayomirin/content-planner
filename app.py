@@ -10,24 +10,16 @@ PERSONA = """
 """
 
 DEFAULT_FETISHES = [
-"Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
-    "Pantyhose Fetish", "Fishnets", "High Heels", "Body Worship", "Ass Worship",
-    "Breast Worship", "Armpit Fetish", "Hair Worship", "Hair Brushing", "Femdom",
-    "Soft Domme", "Hard Findom", "Financial Domination", "Paypig Control",
-    "Total Power Exchange (TPE)", "Contracts & Control", "Mind Games", "Hypnosis",
-    "Correction Training", "Spanking", "Humiliation", "Objectification",
-    "SPH (Small Penis Humiliation)", "Cuckolding", "Sissification", "Slutification",
-    "Beta Loser Degradation", "Virgin Humiliation", "Gooner Control",
-    "JOI (Jerk Off Instruction)", "CEI (Cum Eating Instruction)", "Tease & Denial",
-    "Pegging", "Toy Control", "Puppy Play", "GFE (Girlfriend Experience)",
-    "Bratty Girl", "Chastity & Keyholder", "Techdom & Anydesk", "Giantess Fetish",
-    "Spitting & Saliva Fetish", "Facesitting & Squashing", "Farts Fetish",
-    "Tummy Fetish", "Wedgie", "Worn Clothes & Used Panties", "Denim & Tight Jeans",
-    "Latex & Leather Fetish", "Gloves Fetish"
+    "Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Pantyhose Fetish",
+    "Fishnets", "High Heels", "Body Worship", "Ass Worship", "Breast Worship",
+    "Femdom", "Soft Domme", "Hard Findom", "Financial Domination", "SPH (Small Penis Humiliation)",
+    "Humiliation", "JOI (Jerk Off Instruction)", "CEI (Cum Eating Instruction)", "Tease & Denial",
+    "Pegging", "Chastity & Keyholder", "Giantess Fetish", "Facesitting & Squashing"
 ]
 
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="wide")
 st.title("🔥 Контент-планнер для LoyalFans")
+
 st.markdown("""
 <style>
 .stButton > button {
@@ -35,7 +27,6 @@ st.markdown("""
     border: 1.5px solid #a855f7 !important;
     background: transparent !important;
     color: #7c3aed !important;
-    min-width: 40px !important;
 }
 .stButton > button:hover {
     background: #a855f7 !important;
@@ -43,8 +34,12 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
 if "result" not in st.session_state:
     st.session_state.result = None
+for k, d in [("posts", 5), ("videos", 2), ("audios", 1)]:
+    if k not in st.session_state:
+        st.session_state[k] = d
 
 with st.sidebar:
     st.header("API")
@@ -86,35 +81,34 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days):
         st.error(str(e))
         return None
 
-st.subheader("Настройки")
-
-def counter(label, key, min_v=0, max_v=50, default=5):
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-    with col1:
+def counter(label, key, min_v=0, max_v=50):
+    c1, c2, c3, c4 = st.columns([2.5, 1, 1, 1])
+    with c1:
         st.markdown(f"**{label}**")
-    with col2:
-        if st.button("−", key=f"minus_{key}"):
-            st.session_state[key] = max(min_v, st.session_state.get(key, default) - 1)
-    with col3:
-        st.markdown(f"<div style='text-align:center; font-size:1.3rem; padding-top:6px;'>{st.session_state.get(key, default)}</div>", unsafe_allow_html=True)
-    with col4:
-        if st.button("+", key=f"plus_{key}"):
-            st.session_state[key] = min(max_v, st.session_state.get(key, default) + 1)
-    return st.session_state.get(key, default)
+    with c2:
+        if st.button("−", key=f"m_{key}"):
+            st.session_state[key] = max(min_v, st.session_state[key] - 1)
+    with c3:
+        st.markdown(f"<div style='text-align:center;font-size:1.4rem;padding-top:4px'>{st.session_state[key]}</div>", unsafe_allow_html=True)
+    with c4:
+        if st.button("+", key=f"p_{key}"):
+            st.session_state[key] = min(max_v, st.session_state[key] + 1)
+    return st.session_state[key]
 
-# Инициализация
-for k, d in [("posts", 5), ("videos", 2), ("audios", 1)]:
-    if k not in st.session_state:
-        st.session_state[k] = d
-
-n_posts = counter("Посты", "posts", 0, 30, 5)
-n_videos = counter("Видео", "videos", 0, 15, 2)
-n_audios = counter("Аудио", "audios", 0, 10, 1)
+st.subheader("Настройки")
+n_posts = counter("Посты", "posts", 0, 30)
+n_videos = counter("Видео", "videos", 0, 15)
+n_audios = counter("Аудио", "audios", 0, 10)
 
 st.write("")
 n_mailing_days = st.slider("Дней рассылок", 0, 30, 7)
 period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
 fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["JOI (Jerk Off Instruction)", "Tease & Denial"])
+
+st.write("")
+if st.button("🚀 Сгенерировать", type="primary", use_container_width=True):
+    with st.spinner("Генерирую..."):
+        st.session_state.result = generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days)
 
 if st.session_state.result:
     st.divider()
