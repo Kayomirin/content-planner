@@ -73,7 +73,7 @@ def get_client():
     else:
         return OpenAI(api_key=api_key)
 
-def generate_content(period, n_posts, n_videos, n_audios, selected_fetishes, regenerate_item=None):
+def generate_content(period, n_posts, n_videos, n_audios, selected_fetishes, n_days_mailings=0, regenerate_item=None):
     client = get_client()
     if not client:
         return None
@@ -83,45 +83,62 @@ def generate_content(period, n_posts, n_videos, n_audios, selected_fetishes, reg
     system = PERSONA + f"""
 Ты генерируешь контент-план на {period}.
 Выбранные фетиши для этого плана: {fetish_str}.
-Контент должен быть на английском языке (корректный, естественный), с переводом на русский в скобках или отдельным блоком.
-Стиль: с эмодзи, соблазнительный, под продажу.
-Для видео — полное описание сцены + текст, который нужно говорить.
-Для аудио — готовый текст для записи.
-Для рассылок — постепенные последовательности (welcome → engagement → upsell → soft sell → hard sell).
-Всегда делай контент уникальным и креативным.
+Контент всегда на идеальном английском + полный перевод на русский сразу под ним.
+Используй нишевый сленг сабов и доминаток.
+НИКОГДА не упоминай Россию, рубли или что-либо связанное с этой страной.
+Тон: Soft Domme — игривый, властный, соблазнительный. Если выбраны жёсткие фетиши (SPH, Humiliation, Trampling и т.п.) — добавляй элементы жёсткости и обесценивания.
 """
     
     if regenerate_item:
-        user_prompt = f"Перегенерируй только этот элемент: {regenerate_item}\nОстальной план оставь в том же стиле."
+        user_prompt = f"Перегенерируй только этот элемент: {regenerate_item}\nОстальной план оставь в том же стиле и структуре."
     else:
         user_prompt = f"""
-Сгенерируй полный контент-план на {period}:
-- {n_posts} постов для ленты
-- {n_videos} идей/скриптов для видео
-- {n_audios} текстов для аудио
-- 2-3 последовательности рассылок в личные сообщения (постепенные, ведущие к продаже)
+Сгенерируй полный контент-план на {period}.
 
-Формат ответа строго в Markdown с заголовками:
+СТРОГО соблюдай структуру:
+
 ## Посты
+Ровно {n_posts} постов. Каждый отдельным блоком.
+
 ### Пост 1
-(текст на английском)
-**Перевод:** ...
+[английский текст]
+**Перевод:** [русский]
 
 ## Видео
+Ровно {n_videos} видео. Каждый отдельным блоком.
+
 ### Видео 1
-Описание сцены + текст для озвучки
+**Описание сцены:** ...
+**Текст для озвучки:** ...
 **Перевод:** ...
 
 ## Аудио
+Ровно {n_audios} аудио.
+
 ### Аудио 1
-Текст для записи
+[английский]
 **Перевод:** ...
 
-## Рассылки
-### Последовательность 1
-1. Сообщение 1
-2. Сообщение 2
+## Массовые рассылки
+Сделай рассылки на {n_days_mailings} дней. На каждый день ровно 2 сообщения:
+
+### День 1
+**MORNING HOOK (Утренний крючок):**
+[английский текст с {{name}}]
+**Перевод:** ...
+
+**EVENING PPV (Вечерняя платная):**
+[английский текст с {{name}}]
+**Перевод:** ...
+
+### День 2
 ...
+
+Правила для рассылок:
+- MORNING HOOK — бесплатный крючок. Заставь фана оправдываться, ждать или сомневаться.
+- EVENING PPV — дразнящий текст под locked-контент. Фрустрирующий, чтобы купили.
+- Обязательно используй плейсхолдер {{name}} в каждом сообщении.
+- Тон Soft Domme. При жёстких фетишах добавляй жёсткость.
 """
     
     try:
@@ -132,15 +149,12 @@ def generate_content(period, n_posts, n_videos, n_audios, selected_fetishes, reg
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.9,
-            max_tokens=4000
+            max_tokens=6000
         )
         return response.choices[0].message.content
     except Exception as e:
         st.error(f"Ошибка генерации: {e}")
         return None
-
-# Основная форма
-col1, col2 = st.columns([1, 2])
 
 with col1:
     st.subheader("Настройки плана")
@@ -148,6 +162,7 @@ with col1:
     n_posts = st.slider("Постов", 0, 10, 5)
     n_videos = st.slider("Видео", 0, 5, 2)
     n_audios = st.slider("Аудио", 0, 3, 1)
+    n_days_mailings = st.slider("Дней рассылок (по 2 в день)", 0, 14, 3)
     selected_fetishes = st.multiselect(
     "Фетиши для этого плана",
     options=DEFAULT_FETISHES,
@@ -156,7 +171,7 @@ with col1:
     
     if st.button("🚀 Сгенерировать план", type="primary", use_container_width=True):
         with st.spinner("Генерирую креативный контент..."):
-            result = generate_content(period, n_posts, n_videos, n_audios, selected_fetishes)
+            result = generate_content(period, n_posts, n_videos, n_audios, selected_fetishes, n_days_mailings)
             if result:
                 st.session_state.generated = result
                 st.session_state.history.append(result)
