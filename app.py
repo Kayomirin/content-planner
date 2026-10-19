@@ -28,7 +28,21 @@ DEFAULT_FETISHES = [
 
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="wide")
 st.title("🔥 Контент-планнер для LoyalFans")
-
+st.markdown("""
+<style>
+.stButton > button {
+    border-radius: 20px !important;
+    border: 1.5px solid #a855f7 !important;
+    background: transparent !important;
+    color: #7c3aed !important;
+    min-width: 40px !important;
+}
+.stButton > button:hover {
+    background: #a855f7 !important;
+    color: white !important;
+}
+</style>
+""", unsafe_allow_html=True)
 if "result" not in st.session_state:
     st.session_state.result = None
 
@@ -73,22 +87,34 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days):
         return None
 
 st.subheader("Настройки")
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
-with c2:
-    n_posts = st.slider("Постов всего", 0, 30, 5)
-with c3:
-    n_videos = st.slider("Видео всего", 0, 15, 2)
-with c4:
-    n_audios = st.slider("Аудио всего", 0, 10, 1)
 
+def counter(label, key, min_v=0, max_v=50, default=5):
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+    with col1:
+        st.markdown(f"**{label}**")
+    with col2:
+        if st.button("−", key=f"minus_{key}"):
+            st.session_state[key] = max(min_v, st.session_state.get(key, default) - 1)
+    with col3:
+        st.markdown(f"<div style='text-align:center; font-size:1.3rem; padding-top:6px;'>{st.session_state.get(key, default)}</div>", unsafe_allow_html=True)
+    with col4:
+        if st.button("+", key=f"plus_{key}"):
+            st.session_state[key] = min(max_v, st.session_state.get(key, default) + 1)
+    return st.session_state.get(key, default)
+
+# Инициализация
+for k, d in [("posts", 5), ("videos", 2), ("audios", 1)]:
+    if k not in st.session_state:
+        st.session_state[k] = d
+
+n_posts = counter("Посты", "posts", 0, 30, 5)
+n_videos = counter("Видео", "videos", 0, 15, 2)
+n_audios = counter("Аудио", "audios", 0, 10, 1)
+
+st.write("")
 n_mailing_days = st.slider("Дней рассылок", 0, 30, 7)
+period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
 fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["JOI (Jerk Off Instruction)", "Tease & Denial"])
-
-if st.button("Сгенерировать", type="primary", use_container_width=True):
-    with st.spinner("Генерирую..."):
-        st.session_state.result = generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days)
 
 if st.session_state.result:
     st.divider()
