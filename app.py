@@ -30,26 +30,26 @@ st.set_page_config(page_title="Контент-планнер", page_icon="🔥",
 st.title("🔥 Контент-планнер для LoyalFans")
 st.markdown("""
 <style>
-    .stApp {
-        background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-    }
+    /* Кнопки с обводкой */
     .stButton > button {
-        background-color: transparent;
-        border: 2px solid #7c3aed;
-        color: #7c3aed;
-        border-radius: 12px;
-        padding: 0.6rem 1.2rem;
-        font-weight: 600;
+        background-color: transparent !important;
+        border: 2px solid #a855f7 !important;
+        color: #a855f7 !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
     }
     .stButton > button:hover {
-        background-color: #7c3aed;
-        color: white;
+        background-color: #a855f7 !important;
+        color: white !important;
     }
-    div[data-testid="stVerticalBlock"] > div {
-        background: white;
-        border-radius: 16px;
-        padding: 1rem;
-        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+    /* Поля ввода и селекты */
+    .stSelectbox > div > div, .stMultiSelect > div > div, .stNumberInput > div > div {
+        border: 1.5px solid #c084fc !important;
+        border-radius: 8px !important;
+    }
+    /* Слайдер */
+    .stSlider > div > div > div {
+        background-color: #a855f7 !important;
     }
 </style>
 """, unsafe_allow_html=True)
