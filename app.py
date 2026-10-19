@@ -10,7 +10,7 @@ PERSONA = """
 """
 
 DEFAULT_FETISHES = [
-    "Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
+"Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
     "Pantyhose Fetish", "Fishnets", "High Heels", "Body Worship", "Ass Worship",
     "Breast Worship", "Armpit Fetish", "Hair Worship", "Hair Brushing", "Femdom",
     "Soft Domme", "Hard Findom", "Financial Domination", "Paypig Control",
@@ -52,43 +52,14 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days):
     client = get_client()
     if not client:
         return None
-    
     fetish_str = ", ".join(fetishes) if fetishes else "any"
-    
-    prompt = f"""{PERSONA}
-Период: {period}
-Фетиши: {fetish_str}
-
-Сгенерируй строго по структуре:
-
-## ПОСТЫ
-Ровно {n_posts} постов. Каждый начинай с ### Пост N
-Английский текст + **Перевод:** русский
-
-## ВИДЕО
-Ровно {n_videos} видео. Каждый начинай с ### Видео N
-**Название:** короткое триггерное название
-**Описание:** текст, который вызывает желание купить
-**Текст для озвучки:** ...
-**Перевод:** ...
-**Хештеги:** ровно 10 хештегов по теме
-
-## АУДИО
-Ровно {n_audios} аудио. Каждый начинай с ### Аудио N
-**Название:** короткое триггерное название
-**Описание:** текст, который вызывает желание купить
-**Текст:** ...
-**Перевод:** ...
-**Хештеги:** ровно 10 хештегов по теме
-
-## РАССЫЛКИ
-На {n_mailing_days} дней. Каждый день 4 сообщения:
-1. MORNING HOOK (бесплатно) с {{name}}
-2. DAYTIME WARM-UP (бесплатно) с {{name}}
-3. EVENING PPV (платно) с {{name}}
-4. MORNING BUMP (бесплатно) с {{name}}
-У каждого: английский + перевод. Обязательно {{name}}.
-"""
+    prompt = PERSONA + "\nПериод: " + period + "\nФетиши: " + fetish_str + "\n\n"
+    prompt += "## ПОСТЫ\nРовно " + str(n_posts) + " постов.\n"
+    prompt += "## ВИДЕО\nРовно " + str(n_videos) + " видео. У каждого: Название, Описание (чтобы захотелось купить), Текст для озвучки, Перевод, 10 хештегов.\n"
+    prompt += "## АУДИО\nРовно " + str(n_audios) + " аудио. У каждого: Название, Описание (чтобы захотелось купить), Текст, Перевод, 10 хештегов.\n"
+    prompt += "## РАССЫЛКИ\nНа " + str(n_mailing_days) + " дней. Каждый день 4 сообщения с {name}:\n"
+    prompt += "1. MORNING HOOK\n2. DAYTIME WARM-UP\n3. EVENING PPV\n4. MORNING BUMP\n"
+    prompt += "У каждого английский + перевод."
     try:
         r = client.chat.completions.create(
             model=model,
@@ -100,3 +71,51 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days):
     except Exception as e:
         st.error(str(e))
         return None
+
+st.subheader("Настройки")
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
+with c2:
+    n_posts = st.slider("Постов всего", 0, 30, 5)
+with c3:
+    n_videos = st.slider("Видео всего", 0, 15, 2)
+with c4:
+    n_audios = st.slider("Аудио всего", 0, 10, 1)
+
+n_mailing_days = st.slider("Дней рассылок", 0, 30, 7)
+fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["JOI (Jerk Off Instruction)", "Tease & Denial"])
+
+if st.button("Сгенерировать", type="primary", use_container_width=True):
+    with st.spinner("Генерирую..."):
+        st.session_state.result = generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days)
+
+if st.session_state.result:
+    st.divider()
+    st.subheader("Результат")
+    text = st.session_state.result
+    sections = {"ПОСТЫ": "", "ВИДЕО": "", "АУДИО": "", "РАССЫЛКИ": ""}
+    current = None
+    for line in text.split("\n"):
+        u = line.upper()
+        if "ПОСТЫ" in u:
+            current = "ПОСТЫ"
+        elif "ВИДЕО" in u:
+            current = "ВИДЕО"
+        elif "АУДИО" in u:
+            current = "АУДИО"
+        elif "РАССЫЛКИ" in u:
+            current = "РАССЫЛКИ"
+        elif current:
+            sections[current] += line + "\n"
+    t1, t2, t3, t4 = st.tabs(["Посты", "Видео", "Аудио", "Рассылки"])
+    with t1:
+        st.markdown(sections["ПОСТЫ"] or "Нет")
+    with t2:
+        st.markdown(sections["ВИДЕО"] or "Нет")
+    with t3:
+        st.markdown(sections["АУДИО"] or "Нет")
+    with t4:
+        st.markdown(sections["РАССЫЛКИ"] or "Нет")
+    with st.expander("Весь текст"):
+        st.code(text)
