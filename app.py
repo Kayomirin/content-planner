@@ -22,8 +22,20 @@ Foot Fetish, Toe Worship, Crushing / Trampling, Socks Fetish, Striped Socks, Pan
 """
 
 DEFAULT_FETISHES = [
-    "JOI", "Findom", "Domination", "Submission", "Feet", "Tease & Denial",
-    "SPH", "CEI", "Humiliation", "Praise", "Roleplay", "ASMR", "Custom"
+    "Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
+    "Pantyhose Fetish", "Fishnets", "High Heels", "Body Worship", "Ass Worship",
+    "Breast Worship", "Armpit Fetish", "Hair Worship", "Hair Brushing", "Femdom",
+    "Soft Domme", "Hard Findom", "Financial Domination", "Paypig Control",
+    "Total Power Exchange (TPE)", "Contracts & Control", "Mind Games", "Hypnosis",
+    "Correction Training", "Spanking", "Humiliation", "Objectification",
+    "SPH (Small Penis Humiliation)", "Cuckolding", "Sissification", "Slutification",
+    "Beta Loser Degradation", "Virgin Humiliation", "Gooner Control",
+    "JOI (Jerk Off Instruction)", "CEI (Cum Eating Instruction)", "Tease & Denial",
+    "Pegging", "Toy Control", "Puppy Play", "GFE (Girlfriend Experience)",
+    "Bratty Girl", "Chastity & Keyholder", "Techdom & Anydesk", "Giantess Fetish",
+    "Spitting & Saliva Fetish", "Facesitting & Squashing", "Farts Fetish",
+    "Tummy Fetish", "Wedgie", "Worn Clothes & Used Panties", "Denim & Tight Jeans",
+    "Latex & Leather Fetish", "Gloves Fetish"
 ]
 
 # ========================================================================
@@ -133,8 +145,8 @@ col1, col2 = st.columns([1, 2])
 with col1:
     st.subheader("Настройки плана")
     period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
-    n_posts = st.slider("Постов", 1, 10, 5)
-    n_videos = st.slider("Видео", 1, 5, 2)
+    n_posts = st.slider("Постов", 0, 10, 5)
+    n_videos = st.slider("Видео", 0, 5, 2)
     n_audios = st.slider("Аудио", 0, 3, 1)
     selected_fetishes = st.multiselect(
         "Фетиши для этого плана",
@@ -152,8 +164,11 @@ with col1:
 
 with col2:
     if st.session_state.generated:
-        st.subheader("Результат")
-        st.markdown(st.session_state.generated)
+    st.subheader("Результат")
+    st.markdown(st.session_state.generated)
+    
+    st.code(st.session_state.generated, language=None)
+    st.caption("Нажми на иконку копирования справа вверху блока, чтобы скопировать весь план.")
         
         st.divider()
         st.subheader("Перегенерировать отдельный элемент")
