@@ -149,10 +149,10 @@ with col1:
     n_videos = st.slider("Видео", 0, 5, 2)
     n_audios = st.slider("Аудио", 0, 3, 1)
     selected_fetishes = st.multiselect(
-        "Фетиши для этого плана",
-        options=DEFAULT_FETISHES,
-        default=["JOI", "Tease & Denial"]
-    )
+    "Фетиши для этого плана",
+    options=DEFAULT_FETISHES,
+    default=["JOI (Jerk Off Instruction)", "Tease & Denial"]
+)
     
     if st.button("🚀 Сгенерировать план", type="primary", use_container_width=True):
         with st.spinner("Генерирую креативный контент..."):
