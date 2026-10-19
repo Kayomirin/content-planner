@@ -9,7 +9,7 @@ PERSONA = """
 КРИТИЧЕСКИЕ ПРАВИЛА:
 - Контент всегда на идеальном английском + полный перевод на русский сразу под ним.
 - НИКОГДА не упоминай Россию, рубли или что-либо связанное с этой страной.
-- Не выдумывай конкретные цвета одежды, лака или обстановку — держи описания универсальными, но горячими.
+- Не выдумывай конкретные цвета одежды, лака или обстановку.
 - Используй нишевый сленг. Говори как живая дерзкая доминантка.
 """
 
@@ -72,7 +72,7 @@ def get_client():
     return OpenAI(api_key=api_key)
 
 def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes,
-             gen_content=True, gen_bundles=False, gen_sexting=False):
+             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=2):
     client = get_client()
     if not client:
         return None
@@ -113,21 +113,19 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 **3. EVENING PPV**
 **4. MORNING BUMP**
 У каждого английский + перевод + кратко советы по фото.
-
-## СОВЕТЫ ПО ФОТО
-Общие рекомендации по позам и ракурсам под выбранные фетиши.
 """
     
     if gen_bundles:
-        prompt += """
+        prompt += f"""
 ## БАНДЛЫ
-Предложи 2 идеи бандлов (паков фото).
-Для каждого:
+Сгенерируй ровно {n_bundles} идей бандлов (паков фото) под выбранные фетиши.
+Для каждого бандла:
 **Тема:**
 **Количество фото:**
 **Образы и позы:**
 **Описание для продажи:**
 **Рекомендуемая цена:**
+**Хештеги:** ровно 10 хештегов по теме
 Перевод ключевых частей.
 """
     
@@ -135,7 +133,9 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         prompt += """
 ## СЕКСТИНГ-ПАК
 Подробный план съёмки секстинг-пака по выбранным фетишам.
-Что снимать (фото + короткие видео), сценарий по шагам, позы, ракурсы, прогрессия от тизера к более откровенному.
+Что снимать (фото + короткие видео), сценарий по шагам, позы, ракурсы, прогрессия.
+В конце добавь:
+**Рекомендации по цене:** как лучше продавать этот пак (ориентировочная цена, как дробить или продавать целиком).
 """
     
     if not (gen_content or gen_bundles or gen_sexting):
@@ -175,7 +175,7 @@ n_audios = counter("Аудио", "audios", 0, 10)
 st.write("")
 col_a, col_b = st.columns(2)
 with col_a:
-    n_mailing_days = st.slider("Дней рассылок (4 сообщения/день)", 0, 30, 7)
+    n_mailing_days = st.slider("Количество дней для рассылок", 0, 30, 7)
 with col_b:
     video_minutes = st.number_input("Длительность видео (мин)", 1, 30, 3)
 
@@ -185,11 +185,16 @@ fetishes = st.multiselect("Фетиши для этого плана", DEFAULT_F
 st.write("")
 col1, col2, col3 = st.columns(3)
 with col1:
-    gen_content = st.checkbox("Основной контент (посты, видео, аудио, рассылки)", value=True)
+    gen_content = st.checkbox("Основной контент", value=True)
 with col2:
     gen_bundles = st.checkbox("Бандлы", value=False)
 with col3:
     gen_sexting = st.checkbox("Секстинг-пак", value=False)
+
+if gen_bundles:
+    n_bundles = st.number_input("Сколько бандлов сгенерировать", 1, 10, 2)
+else:
+    n_bundles = 2
 
 st.write("")
 if st.button("🚀 Сгенерировать план", type="primary", use_container_width=True):
@@ -197,7 +202,7 @@ if st.button("🚀 Сгенерировать план", type="primary", use_con
         st.session_state.result = generate(
             period, n_posts, n_videos, n_audios, fetishes,
             n_mailing_days, video_minutes,
-            gen_content, gen_bundles, gen_sexting
+            gen_content, gen_bundles, gen_sexting, n_bundles
         )
 
 if st.session_state.result:
@@ -206,3 +211,4 @@ if st.session_state.result:
     st.markdown(st.session_state.result)
     with st.expander("Скопировать весь текст"):
         st.code(st.session_state.result)
+        
