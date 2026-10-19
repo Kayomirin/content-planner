@@ -10,7 +10,7 @@ PERSONA = """
 - Контент всегда на идеальном английском + полный перевод на русский сразу под ним.
 - НИКОГДА не упоминай Россию, рубли или что-либо связанное с этой страной.
 - Не выдумывай конкретные цвета одежды, лака или обстановку — держи описания универсальными, но горячими.
-- Используй нишевый сленг сабов и доминаток. Говори как живая дерзкая доминантка, без банальных фраз.
+- Используй нишевый сленг. Говори как живая дерзкая доминантка.
 """
 
 DEFAULT_FETISHES = [
@@ -46,10 +46,6 @@ st.markdown("""
     background: #a855f7 !important;
     color: white !important;
 }
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -69,81 +65,82 @@ with st.sidebar:
 
 def get_client():
     if not api_key:
-        st.error("Введи API-ключ в сайдбаре")
+        st.error("Введи API-ключ")
         return None
     if "Grok" in provider:
         return OpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
     return OpenAI(api_key=api_key)
 
-def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes):
+def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes,
+             gen_content=True, gen_bundles=False, gen_sexting=False):
     client = get_client()
     if not client:
         return None
     fetish_str = ", ".join(fetishes) if fetishes else "смешанные"
-    prompt = PERSONA + f"""
-Период плана: {period}
-Выбранные фетиши: {fetish_str}
-Желаемая длительность видео: примерно {video_minutes} минут.
-
-Сгенерируй полный план строго по разделам (используй точные заголовки ## ):
-
-## ПОСТЫ
-Ровно {n_posts} постов. Каждый начинай с ### Пост N
-Английский текст + **Перевод:** русский
-После каждого поста кратко: советы по фото (поза, ракурс, что подчеркнуть).
+    
+    prompt = PERSONA + f"\nПериод: {period}\nФетиши: {fetish_str}\nДлительность видео: ~{video_minutes} мин.\n\n"
+    prompt += "Сгенерируй ТОЛЬКО запрошенные разделы. Используй точные заголовки ## \n\n"
+    
+    if gen_content:
+        prompt += f"""## ПОСТЫ
+Ровно {n_posts} постов. Каждый с ### Пост N
+Английский + **Перевод:**
+Кратко советы по фото (поза, ракурс).
 
 ## ВИДЕО
-Ровно {n_videos} видео. Каждый начинай с ### Видео N
-**Название:** короткое триггерное
-**Описание:** продающее, чтобы захотелось купить
-**Длительность:** примерно {video_minutes} мин
-**Текст для озвучки:** ...
-**Перевод:** ...
-**Хештеги:** ровно 10 по теме
-**Советы по съёмке:** поза, ракурс, что показать.
+Ровно {n_videos} видео. Каждый с ### Видео N
+**Название:**
+**Описание:** (продающее)
+**Длительность:** ~{video_minutes} мин
+**Текст для озвучки:**
+**Перевод:**
+**Хештеги:** 10 шт
+**Советы по съёмке:**
 
 ## АУДИО
-Ровно {n_audios} аудио. Каждый начинай с ### Аудио N
-**Название:** короткое триггерное
-**Описание:** продающее
-**Текст:** ...
-**Перевод:** ...
-**Хештеги:** ровно 10 по теме
+Ровно {n_audios} аудио. Каждый с ### Аудио N
+**Название:**
+**Описание:**
+**Текст:**
+**Перевод:**
+**Хештеги:** 10 шт
 
 ## РАССЫЛКИ
-На {n_mailing_days} дней. Каждый день строго 4 сообщения:
+На {n_mailing_days} дней. Каждый день 4 сообщения с {{name}}:
 ### День N
-**1. MORNING HOOK (бесплатно)**
-[английский с {{name}}]
-**Перевод:** ...
-**2. DAYTIME WARM-UP (бесплатно)**
-[английский с {{name}}]
-**Перевод:** ...
-**3. EVENING PPV (платно)**
-[английский с {{name}}]
-**Перевод:** ...
-**4. MORNING BUMP (бесплатно)**
-[английский с {{name}}]
-**Перевод:** ...
-После каждого дня кратко: советы по фото/видео для этих рассылок (поза, ракурс).
+**1. MORNING HOOK**
+**2. DAYTIME WARM-UP**
+**3. EVENING PPV**
+**4. MORNING BUMP**
+У каждого английский + перевод + кратко советы по фото.
 
 ## СОВЕТЫ ПО ФОТО
-Общие рекомендации по фото для постов и рассылок под выбранные фетиши: позы, ракурсы, что подчёркивать, чего избегать.
-
+Общие рекомендации по позам и ракурсам под выбранные фетиши.
+"""
+    
+    if gen_bundles:
+        prompt += """
 ## БАНДЛЫ
-Предложи 2 идеи бандлов (паков фото) под выбранные фетиши.
+Предложи 2 идеи бандлов (паков фото).
 Для каждого:
-**Тема:** ...
-**Количество фото:** ...
-**Образы и позы:** ...
-**Описание для продажи:** ...
-**Рекомендуемая цена:** ...
-**Перевод** ключевых частей.
-
+**Тема:**
+**Количество фото:**
+**Образы и позы:**
+**Описание для продажи:**
+**Рекомендуемая цена:**
+Перевод ключевых частей.
+"""
+    
+    if gen_sexting:
+        prompt += """
 ## СЕКСТИНГ-ПАК
 Подробный план съёмки секстинг-пака по выбранным фетишам.
-Что снимать (фото + короткие видео), сценарий по шагам, позы, ракурсы, прогрессия (от тизера к более откровенному).
+Что снимать (фото + короткие видео), сценарий по шагам, позы, ракурсы, прогрессия от тизера к более откровенному.
 """
+    
+    if not (gen_content or gen_bundles or gen_sexting):
+        return "Ничего не выбрано для генерации."
+    
     try:
         r = client.chat.completions.create(
             model=model,
@@ -153,7 +150,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         )
         return r.choices[0].message.content
     except Exception as e:
-        st.error(f"Ошибка генерации: {e}")
+        st.error(f"Ошибка: {e}")
         return None
 
 def counter(label, key, min_v=0, max_v=50):
@@ -186,56 +183,26 @@ period = st.selectbox("Период", ["1 день", "3 дня", "Неделя",
 fetishes = st.multiselect("Фетиши для этого плана", DEFAULT_FETISHES, default=["JOI (Jerk Off Instruction)", "Tease & Denial"])
 
 st.write("")
+col1, col2, col3 = st.columns(3)
+with col1:
+    gen_content = st.checkbox("Основной контент (посты, видео, аудио, рассылки)", value=True)
+with col2:
+    gen_bundles = st.checkbox("Бандлы", value=False)
+with col3:
+    gen_sexting = st.checkbox("Секстинг-пак", value=False)
+
+st.write("")
 if st.button("🚀 Сгенерировать план", type="primary", use_container_width=True):
-    with st.spinner("Генерирую креативный контент..."):
-        st.session_state.result = generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes)
+    with st.spinner("Генерирую..."):
+        st.session_state.result = generate(
+            period, n_posts, n_videos, n_audios, fetishes,
+            n_mailing_days, video_minutes,
+            gen_content, gen_bundles, gen_sexting
+        )
 
 if st.session_state.result:
     st.divider()
     st.subheader("Результат")
-    text = st.session_state.result
-
-    # Простой и надёжный вывод всего текста + вкладки по возможности
-    st.markdown(text)
-
-    st.write("---")
+    st.markdown(st.session_state.result)
     with st.expander("Скопировать весь текст"):
-        st.code(text)
-
-    # Дополнительные вкладки для удобства (если разделы нашлись)
-    sections = {"ПОСТЫ": "", "ВИДЕО": "", "АУДИО": "", "РАССЫЛКИ": "", "СОВЕТЫ": "", "БАНДЛЫ": "", "СЕКСТИНГ": ""}
-    current = None
-    for line in text.split("\n"):
-        u = line.upper().strip()
-        if "## ПОСТЫ" in u or "### ПОСТ" in u:
-            current = "ПОСТЫ"
-        elif "## ВИДЕО" in u or "### ВИДЕО" in u:
-            current = "ВИДЕО"
-        elif "## АУДИО" in u or "### АУДИО" in u:
-            current = "АУДИО"
-        elif "## РАССЫЛКИ" in u or "### ДЕНЬ" in u:
-            current = "РАССЫЛКИ"
-        elif "## СОВЕТЫ" in u:
-            current = "СОВЕТЫ"
-        elif "## БАНДЛЫ" in u:
-            current = "БАНДЛЫ"
-        elif "## СЕКСТИНГ" in u:
-            current = "СЕКСТИНГ"
-        elif current and line.strip():
-            sections[current] += line + "\n"
-
-    tabs = st.tabs(["Посты", "Видео", "Аудио", "Рассылки", "Советы", "Бандлы", "Секстинг"])
-    with tabs[0]:
-        st.markdown(sections["ПОСТЫ"] or "Смотри полный текст выше")
-    with tabs[1]:
-        st.markdown(sections["ВИДЕО"] or "Смотри полный текст выше")
-    with tabs[2]:
-        st.markdown(sections["АУДИО"] or "Смотри полный текст выше")
-    with tabs[3]:
-        st.markdown(sections["РАССЫЛКИ"] or "Смотри полный текст выше")
-    with tabs[4]:
-        st.markdown(sections["СОВЕТЫ"] or "Смотри полный текст выше")
-    with tabs[5]:
-        st.markdown(sections["БАНДЛЫ"] or "Смотри полный текст выше")
-    with tabs[6]:
-        st.markdown(sections["СЕКСТИНГ"] or "Смотри полный текст выше")
+        st.code(st.session_state.result)
