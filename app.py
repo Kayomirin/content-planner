@@ -164,11 +164,11 @@ with col1:
 
 with col2:
     if st.session_state.generated:
-    st.subheader("Результат")
-    st.markdown(st.session_state.generated)
-    
-    st.code(st.session_state.generated, language=None)
-    st.caption("Нажми на иконку копирования справа вверху блока, чтобы скопировать весь план.")
+        st.subheader("Результат")
+        st.markdown(st.session_state.generated)
+        
+        st.code(st.session_state.generated, language=None)
+        st.caption("Нажми на иконку копирования справа вверху блока, чтобы скопировать весь план.")
         
         st.divider()
         st.subheader("Перегенерировать отдельный элемент")
