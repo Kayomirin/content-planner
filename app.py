@@ -61,4 +61,4 @@ def generate_content(period, n_posts, n_videos, n_audios, selected_fetishes, n_d
     if not client:
         return None
     
-    fetish_str = ", ".join(selected_fetishes) if 
+    fetish_str = ", ".join(selected_fetishes) if selected_fetishes else "смешанные"
