@@ -67,7 +67,7 @@ def get_client():
         return OpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
     return OpenAI(api_key=api_key)
 
-def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes,
+def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes, audio_minutes,
              gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=2):
     client = get_client()
     if not client:
@@ -81,13 +81,23 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 Ровно {n_posts} постов. Английский + перевод + кратко советы по фото.
 
 ## ВИДЕО
-Ровно {n_videos} видео. Название, описание, длительность ~{video_minutes} мин, текст, перевод, 10 хештегов, советы по съёмке.
+Ровно {n_videos} видео. Название, описание, длительность ~{video_minutes} мин.
+Скрипт с примерным таймингом (0:00–0:30 и т.д.), текст в кавычках — то, что нужно сказать.
+Перевод, 10 хештегов, советы по съёмке.
 
 ## АУДИО
-Ровно {n_audios} аудио. Название, описание, текст, перевод, 10 хештегов.
+Ровно {n_audios} аудио. Название, описание.
+Длительность ~{audio_minutes} мин.
+Скрипт с примерным таймингом и паузами (например: 0:00–0:20 текст, пауза 3 сек).
+Перевод, 10 хештегов.
 
 ## РАССЫЛКИ
-На {n_mailing_days} дней. Каждый день 4 сообщения с {{name}} (MORNING HOOK, DAYTIME WARM-UP, EVENING PPV, MORNING BUMP). Английский + перевод.
+На {n_mailing_days} дней. Каждый день 4 сообщения с {{name}}:
+1. MORNING HOOK
+2. DAYTIME WARM-UP
+3. EVENING PPV — обязательно добавь рекомендацию: сколько фото, длительность видео (если есть), примерная цена.
+4. MORNING BUMP
+У каждого английский + перевод.
 """
     
     if gen_bundles:
@@ -96,21 +106,22 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 Ровно {n_bundles} бандлов. Для каждого:
 **Тема:** (на английском)
 **Количество фото:**
-**Образы и позы:** (на русском, чтобы сразу можно было снимать)
+**Образы и позы:** (на русском)
 **Описание для продажи:** (на английском)
-**Рекомендуемая цена:** (простая, например $15 за 18 фото)
-**Хештеги:** ровно 10 на английском по теме
+**Рекомендуемая цена:** (простая цифра)
+**Хештеги:** ровно 10 на английском
 """
     
     if gen_sexting:
         prompt += """
 ## СЕКСТИНГ-ПАК
-Весь раздел на русском языке.
-Разбей на части (Part 1, Part 2 и т.д.).
-Для каждой части напиши:
+Весь раздел на русском.
+Разбей на части.
+Для каждой части:
 - Что снимать (позы, ракурсы)
-- Сколько фото и сколько коротких видео
-- Примерная цена, если продавать эту часть целиком или по отдельности
+- Сколько фото и коротких видео
+- Примерная цена за эту часть
+- Короткий примерный скрипт (что можно написать фану к этим фото/видео)
 В конце общая рекомендация по продаже всего пака.
 """
     
@@ -149,14 +160,16 @@ n_videos = counter("Видео", "videos", 0, 15)
 n_audios = counter("Аудио", "audios", 0, 10)
 
 st.write("")
-col_a, col_b = st.columns(2)
+col_a, col_b, col_c = st.columns(3)
 with col_a:
-    n_mailing_days = st.slider("Количество дней для рассылок", 0, 30, 7)
+    n_mailing_days = st.slider("Дней рассылок", 0, 30, 1)
 with col_b:
-    video_minutes = st.number_input("Длительность видео (мин)", 1, 30, 3)
+    video_minutes = st.number_input("Длительность видео (мин)", 1, 30, 5)
+with col_c:
+    audio_minutes = st.number_input("Длительность аудио (мин)", 1, 20, 5)
 
 period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
-fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["JOI (Jerk Off Instruction)", "Tease & Denial"])
+fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["Foot Fetish"])
 
 st.write("")
 col1, col2, col3 = st.columns(3)
@@ -168,16 +181,16 @@ with col3:
     gen_sexting = st.checkbox("Секстинг-пак", value=False)
 
 if gen_bundles:
-    n_bundles = st.number_input("Сколько бандлов", 1, 10, 2)
+    n_bundles = st.number_input("Сколько бандлов", 1, 10, 1)
 else:
-    n_bundles = 2
+    n_bundles = 1
 
 st.write("")
 if st.button("🚀 Сгенерировать план", type="primary", use_container_width=True):
     with st.spinner("Генерирую..."):
         st.session_state.result = generate(
             period, n_posts, n_videos, n_audios, fetishes,
-            n_mailing_days, video_minutes,
+            n_mailing_days, video_minutes, audio_minutes,
             gen_content, gen_bundles, gen_sexting, n_bundles
         )
 
@@ -187,3 +200,4 @@ if st.session_state.result:
     st.markdown(st.session_state.result)
     with st.expander("Скопировать весь текст"):
         st.code(st.session_state.result)
+        
