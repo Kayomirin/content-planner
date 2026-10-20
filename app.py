@@ -1,5 +1,7 @@
 import streamlit as st
 from openai import OpenAI
+from datetime import date, timedelta
+import pandas as pd
 
 PERSONA = """
 Ты — элитный сценарист и контент-креатор для платформ Fansly и LoyalFans.
@@ -7,6 +9,7 @@ PERSONA = """
 Тон: властный, соблазнительный, высокомерный, но обволакивающий.
 Если выбраны жёсткие фетиши — добавляй давление и обесценивание.
 Правила: основной контент на идеальном английском + перевод на русский. Никогда не упоминай Россию или рубли.
+Фразы в диалогах — короткие и естественные.
 """
 
 DEFAULT_FETISHES = [
@@ -27,7 +30,6 @@ DEFAULT_FETISHES = [
 ]
 
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="centered")
-st.title("🔥 Контент-планнер для LoyalFans")
 
 st.markdown("""
 <style>
@@ -47,6 +49,8 @@ st.markdown("""
 
 if "result" not in st.session_state:
     st.session_state.result = None
+if "tracker" not in st.session_state:
+    st.session_state.tracker = {}
 
 with st.sidebar:
     st.header("🔑 API")
@@ -65,7 +69,7 @@ def get_client():
     return OpenAI(api_key=api_key)
 
 def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes, audio_minutes,
-             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1):
+             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1, call_prompt=""):
     client = get_client()
     if not client:
         return None
@@ -81,7 +85,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 Ровно {n_videos} видео. Название, описание, длительность ~{video_minutes} мин.
 Скрипт с таймингом, текст в кавычках — что сказать.
 Перевод.
-**Советы по съёмке:** обязательно на русском (ракурс, позы, что подчеркнуть).
+**Советы по съёмке:** обязательно на русском.
 10 хештегов.
 
 ## АУДИО
@@ -94,7 +98,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 На {n_mailing_days} дней. Каждый день 4 сообщения с {{name}}:
 1. MORNING HOOK
 2. DAYTIME WARM-UP
-3. EVENING PPV — обязательно добавь примерную цену за видео и за фото (если есть).
+3. EVENING PPV — добавь примерную цену за видео и за фото.
 4. MORNING BUMP
 У каждого английский + перевод.
 """
@@ -107,7 +111,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 **Количество фото:**
 **Образы и позы:** (на русском)
 **Описание для продажи:** (на английском)
-**Рекомендуемая цена:** (простая цифра)
+**Рекомендуемая цена:**
 **Хештеги:** ровно 10 на английском
 """
     
@@ -116,15 +120,26 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 ## СЕКСТИНГ-ПАК
 Весь раздел на русском.
 Разбей на части.
-Для каждой части:
-- Что снимать (позы, ракурсы)
-- Сколько фото и коротких видео
-- Примерная цена за эту часть
-- Короткий примерный скрипт к этим фото/видео
-В конце общая рекомендация по продаже всего пака.
+Для каждой части: что снимать, сколько фото/видео, примерная цена, короткий скрипт.
+В конце общая рекомендация.
 """
     
-    if not (gen_content or gen_bundles or gen_sexting):
+    if call_prompt.strip():
+        prompt += f"""
+## СЦЕНАРИЙ ЗВОНКА
+Запрос: {call_prompt}
+
+Напиши диалог:
+**Ты:** [короткая фраза на английском]
+**Перевод:** [русский]
+
+**Раб:** [короткая фраза на английском]
+**Перевод:** [русский]
+
+В конце 2 варианта концовки (кончил / не кончил).
+"""
+    
+    if not (gen_content or gen_bundles or gen_sexting or call_prompt.strip()):
         return "Ничего не выбрано."
     
     try:
@@ -139,47 +154,111 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         st.error(str(e))
         return None
 
-st.subheader("Настройки")
+# Переключатель страниц
+page = st.radio("Режим", ["📝 Генератор", "📊 Трекер"], horizontal=True, label_visibility="collapsed")
 
-col1, col2 = st.columns(2)
-with col1:
-    n_posts = st.slider("Посты", 0, 15, 3)
-    n_videos = st.slider("Видео", 0, 8, 1)
-    n_audios = st.slider("Аудио", 0, 5, 1)
-with col2:
-    video_minutes = st.slider("Длит. видео (мин)", 1, 20, 5)
-    audio_minutes = st.slider("Длит. аудио (мин)", 1, 15, 5)
-    n_mailing_days = st.slider("Дней рассылок", 0, 14, 1)
+# ====================== ГЕНЕРАТОР ======================
+if page == "📝 Генератор":
+    st.title("🔥 Контент-планнер")
+    st.subheader("Настройки")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        n_posts = st.slider("Посты", 0, 15, 3)
+        n_videos = st.slider("Видео", 0, 8, 1)
+        n_audios = st.slider("Аудио", 0, 5, 1)
+    with col2:
+        video_minutes = st.slider("Длит. видео (мин)", 1, 20, 5)
+        audio_minutes = st.slider("Длит. аудио (мин)", 1, 15, 5)
+        n_mailing_days = st.slider("Дней рассылок", 0, 14, 1)
 
-period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
-fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["Foot Fetish"])
+    period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
+    fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["Foot Fetish"])
 
-st.write("")
-c1, c2, c3 = st.columns(3)
-with c1:
-    gen_content = st.checkbox("Основной контент", value=True)
-with c2:
-    gen_bundles = st.checkbox("Бандлы", value=False)
-with c3:
-    gen_sexting = st.checkbox("Секстинг-пак", value=False)
+    st.write("")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        gen_content = st.checkbox("Основной контент", value=True)
+    with c2:
+        gen_bundles = st.checkbox("Бандлы", value=False)
+    with c3:
+        gen_sexting = st.checkbox("Секстинг-пак", value=False)
 
-if gen_bundles:
-    n_bundles = st.number_input("Сколько бандлов", 1, 5, 1)
+    if gen_bundles:
+        n_bundles = st.number_input("Сколько бандлов", 1, 5, 1)
+    else:
+        n_bundles = 1
+
+    st.write("---")
+    call_prompt = st.text_area("Сценарий для звонка (необязательно)", height=80, placeholder="Тема, длительность, триггерные фразы...")
+
+    if st.button("🚀 Сгенерировать", type="primary", use_container_width=True):
+        with st.spinner("Генерирую..."):
+            st.session_state.result = generate(
+                period, n_posts, n_videos, n_audios, fetishes,
+                n_mailing_days, video_minutes, audio_minutes,
+                gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt
+            )
+
+    if st.session_state.result:
+        st.divider()
+        st.markdown(st.session_state.result)
+        with st.expander("Скопировать весь текст"):
+            st.code(st.session_state.result)
+
+# ====================== ТРЕКЕР ======================
 else:
-    n_bundles = 1
+    st.title("📊 Трекер контента")
+    today = date.today()
+    selected_date = st.date_input("Дата", today)
 
-st.write("")
-if st.button("🚀 Сгенерировать план", type="primary", use_container_width=True):
-    with st.spinner("Генерирую..."):
-        st.session_state.result = generate(
-            period, n_posts, n_videos, n_audios, fetishes,
-            n_mailing_days, video_minutes, audio_minutes,
-            gen_content, gen_bundles, gen_sexting, n_bundles
-        )
+    date_key = str(selected_date)
+    if date_key not in st.session_state.tracker:
+        st.session_state.tracker[date_key] = {
+            "posts": 0, "videos": 0, "audios": 0, "stories": 0, "mailings": 0
+        }
 
-if st.session_state.result:
-    st.divider()
-    st.subheader("Результат")
-    st.markdown(st.session_state.result)
-    with st.expander("Скопировать весь текст"):
-        st.code(st.session_state.result)
+    st.write("Сколько сделала:")
+    col1, col2 = st.columns(2)
+    with col1:
+        posts = st.number_input("Посты", 0, 20, st.session_state.tracker[date_key]["posts"], key=f"p_{date_key}")
+        videos = st.number_input("Видео", 0, 10, st.session_state.tracker[date_key]["videos"], key=f"v_{date_key}")
+        audios = st.number_input("Аудио", 0, 10, st.session_state.tracker[date_key]["audios"], key=f"a_{date_key}")
+    with col2:
+        stories = st.number_input("Сторис", 0, 20, st.session_state.tracker[date_key]["stories"], key=f"s_{date_key}")
+        mailings = st.number_input("Рассылки", 0, 30, st.session_state.tracker[date_key]["mailings"], key=f"m_{date_key}")
+
+    if st.button("💾 Сохранить день", use_container_width=True):
+        st.session_state.tracker[date_key] = {
+            "posts": posts, "videos": videos, "audios": audios,
+            "stories": stories, "mailings": mailings
+        }
+        st.success("Сохранено")
+
+    st.write("---")
+    st.subheader("Итог за период")
+    period_days = st.selectbox("Период", [7, 14, 30], format_func=lambda x: f"Последние {x} дней")
+
+    start = today - timedelta(days=period_days - 1)
+    total = {"posts": 0, "videos": 0, "audios": 0, "stories": 0, "mailings": 0}
+    days_filled = 0
+
+    for i in range(period_days):
+        d = str(start + timedelta(days=i))
+        if d in st.session_state.tracker:
+            days_filled += 1
+            for k in total:
+                total[k] += st.session_state.tracker[d][k]
+
+    st.metric("Дней заполнено", f"{days_filled} / {period_days}")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("Посты", total["posts"])
+    c2.metric("Видео", total["videos"])
+    c3.metric("Аудио", total["audios"])
+    c4.metric("Сторис", total["stories"])
+    c5.metric("Рассылки", total["mailings"])
+
+    if st.session_state.tracker:
+        df = pd.DataFrame.from_dict(st.session_state.tracker, orient="index")
+        df.index.name = "Дата"
+        st.dataframe(df.sort_index(ascending=False), use_container_width=True)
