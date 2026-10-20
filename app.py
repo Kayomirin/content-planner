@@ -32,22 +32,27 @@ st.title("🔥 Контент-планнер для LoyalFans")
 st.markdown("""
 <style>
 .stButton > button {
-    border-radius: 20px !important;
+    border-radius: 12px !important;
     border: 1.5px solid #a855f7 !important;
     background: transparent !important;
     color: #7c3aed !important;
     font-weight: 600 !important;
+    min-width: 36px !important;
+    padding: 0.2rem 0.6rem !important;
 }
 .stButton > button:hover {
     background: #a855f7 !important;
     color: white !important;
+}
+div[data-testid="column"] {
+    padding: 0 4px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
 if "result" not in st.session_state:
     st.session_state.result = None
-for k, d in [("posts", 5), ("videos", 2), ("audios", 1)]:
+for k, d in [("posts", 3), ("videos", 1), ("audios", 1), ("mail_days", 1), ("vid_min", 5), ("aud_min", 5)]:
     if k not in st.session_state:
         st.session_state[k] = d
 
@@ -68,7 +73,7 @@ def get_client():
     return OpenAI(api_key=api_key)
 
 def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes, audio_minutes,
-             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=2):
+             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1):
     client = get_client()
     if not client:
         return None
@@ -142,33 +147,61 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         st.error(str(e))
         return None
 
-def counter(label, key, min_v=0, max_v=50):
-    c1, c2, c3, c4 = st.columns([2.5, 1, 1, 1])
+def mini_counter(label, key, min_v=0, max_v=30):
+    c1, c2, c3, c4 = st.columns([2.2, 0.6, 0.8, 0.6])
     with c1:
         st.markdown(f"**{label}**")
     with c2:
         if st.button("−", key=f"m_{key}"):
             st.session_state[key] = max(min_v, st.session_state[key] - 1)
     with c3:
-        st.markdown(f"<div style='text-align:center;font-size:1.4rem;padding-top:4px'>{st.session_state[key]}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align:center;font-size:1.3rem;font-weight:600;padding-top:2px'>{st.session_state[key]}</div>", unsafe_allow_html=True)
     with c4:
         if st.button("+", key=f"p_{key}"):
             st.session_state[key] = min(max_v, st.session_state[key] + 1)
     return st.session_state[key]
 
-st.subheader("Настройки плана")
-n_posts = counter("Посты", "posts", 0, 30)
-n_videos = counter("Видео", "videos", 0, 15)
-n_audios = counter("Аудио", "audios", 0, 10)
+st.subheader("Настройки")
+
+# Посты
+n_posts = mini_counter("Посты", "posts", 0, 20)
+
+# Видео + длительность в одной строке
+c1, c2 = st.columns([1.6, 1])
+with c1:
+    n_videos = mini_counter("Видео", "videos", 0, 10)
+with c2:
+    st.markdown("**Длит. видео (мин)**")
+    cc1, cc2, cc3 = st.columns([1, 1.2, 1])
+    with cc1:
+        if st.button("−", key="m_vidmin"):
+            st.session_state.vid_min = max(1, st.session_state.vid_min - 1)
+    with cc2:
+        st.markdown(f"<div style='text-align:center;font-size:1.3rem;font-weight:600'>{st.session_state.vid_min}</div>", unsafe_allow_html=True)
+    with cc3:
+        if st.button("+", key="p_vidmin"):
+            st.session_state.vid_min = min(30, st.session_state.vid_min + 1)
+    video_minutes = st.session_state.vid_min
+
+# Аудио + длительность
+c1, c2 = st.columns([1.6, 1])
+with c1:
+    n_audios = mini_counter("Аудио", "audios", 0, 10)
+with c2:
+    st.markdown("**Длит. аудио (мин)**")
+    cc1, cc2, cc3 = st.columns([1, 1.2, 1])
+    with cc1:
+        if st.button("−", key="m_audmin"):
+            st.session_state.aud_min = max(1, st.session_state.aud_min - 1)
+    with cc2:
+        st.markdown(f"<div style='text-align:center;font-size:1.3rem;font-weight:600'>{st.session_state.aud_min}</div>", unsafe_allow_html=True)
+    with cc3:
+        if st.button("+", key="p_audmin"):
+            st.session_state.aud_min = min(20, st.session_state.aud_min + 1)
+    audio_minutes = st.session_state.aud_min
 
 st.write("")
-col_a, col_b, col_c = st.columns(3)
-with col_a:
-    n_mailing_days = st.slider("Дней рассылок", 0, 30, 1)
-with col_b:
-    video_minutes = st.number_input("Длительность видео (мин)", 1, 30, 5)
-with col_c:
-    audio_minutes = st.number_input("Длительность аудио (мин)", 1, 20, 5)
+n_mailing_days = mini_counter("Дней рассылок", "mail_days", 0, 14)
 
 period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
 fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["Foot Fetish"])
@@ -183,7 +216,7 @@ with col3:
     gen_sexting = st.checkbox("Секстинг-пак", value=False)
 
 if gen_bundles:
-    n_bundles = st.number_input("Сколько бандлов", 1, 10, 1)
+    n_bundles = st.number_input("Сколько бандлов", 1, 5, 1)
 else:
     n_bundles = 1
 
@@ -202,4 +235,3 @@ if st.session_state.result:
     st.markdown(st.session_state.result)
     with st.expander("Скопировать весь текст"):
         st.code(st.session_state.result)
-        
