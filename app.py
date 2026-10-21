@@ -47,7 +47,7 @@ def save_tracker(data):
         with open(TRACKER_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        st.warning(f"Не удалось сохранить файл: {e}")
+        st.warning(f"Не удалось сохранить: {e}")
 
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="centered")
 
@@ -57,22 +57,10 @@ st.markdown("""
     border-radius: 12px !important;
     border: 1.5px solid #7c3aed !important;
     color: #7c3aed !important;
-    background: transparent !important;
 }
 .stButton > button:hover {
     background: #7c3aed !important;
     color: white !important;
-}
-/* Фиолетовые ползунки */
-div[data-testid="stSlider"] > div > div > div > div {
-    background-color: #a855f7 !important;
-}
-div[data-testid="stSlider"] [role="slider"] {
-    background-color: #7c3aed !important;
-    border: 2px solid #7c3aed !important;
-}
-.stSlider [data-baseweb="slider"] > div > div {
-    background: #a855f7 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -266,7 +254,7 @@ else:
             "stories": stories, "mailings": mailings
         }
         save_tracker(st.session_state.tracker)
-        st.success("Сохранено и записано в файл")
+        st.success("Сохранено")
 
     st.write("---")
     st.subheader("Итог за период")
@@ -297,7 +285,7 @@ else:
         st.dataframe(df.sort_index(ascending=False), use_container_width=True)
 
     st.download_button(
-        "⬇️ Скачать резервную копию трекера",
+        "⬇️ Скачать копию трекера",
         data=json.dumps(st.session_state.tracker, ensure_ascii=False, indent=2),
         file_name="tracker_backup.json",
         mime="application/json"
