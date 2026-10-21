@@ -43,8 +43,11 @@ def load_tracker():
     return {}
 
 def save_tracker(data):
-    with open(TRACKER_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    try:
+        with open(TRACKER_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        st.warning(f"Не удалось сохранить файл: {e}")
 
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="centered")
 
@@ -52,23 +55,24 @@ st.markdown("""
 <style>
 .stButton > button {
     border-radius: 12px !important;
-    border: 1.5px solid #a855f7 !important;
-    background: transparent !important;
+    border: 1.5px solid #7c3aed !important;
     color: #7c3aed !important;
-    font-weight: 600 !important;
+    background: transparent !important;
 }
 .stButton > button:hover {
-    background: #a855f7 !important;
+    background: #7c3aed !important;
     color: white !important;
 }
-div[data-testid="stSlider"] div[role="slider"] {
-    background-color: #7c3aed !important;
-}
-div[data-testid="stSlider"] > div > div > div {
-    background: linear-gradient(to right, #a855f7, #a855f7) !important;
-}
-[data-baseweb="slider"] div {
+/* Фиолетовые ползунки */
+div[data-testid="stSlider"] > div > div > div > div {
     background-color: #a855f7 !important;
+}
+div[data-testid="stSlider"] [role="slider"] {
+    background-color: #7c3aed !important;
+    border: 2px solid #7c3aed !important;
+}
+.stSlider [data-baseweb="slider"] > div > div {
+    background: #a855f7 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -249,12 +253,12 @@ else:
     st.write("Сколько сделала:")
     col1, col2 = st.columns(2)
     with col1:
-        posts = st.number_input("Посты", 0, 20, st.session_state.tracker[date_key]["posts"], key=f"p_{date_key}")
-        videos = st.number_input("Видео", 0, 10, st.session_state.tracker[date_key]["videos"], key=f"v_{date_key}")
-        audios = st.number_input("Аудио", 0, 10, st.session_state.tracker[date_key]["audios"], key=f"a_{date_key}")
+        posts = st.number_input("Посты", 0, 20, int(st.session_state.tracker[date_key].get("posts", 0)), key=f"p_{date_key}")
+        videos = st.number_input("Видео", 0, 10, int(st.session_state.tracker[date_key].get("videos", 0)), key=f"v_{date_key}")
+        audios = st.number_input("Аудио", 0, 10, int(st.session_state.tracker[date_key].get("audios", 0)), key=f"a_{date_key}")
     with col2:
-        stories = st.number_input("Сторис", 0, 20, st.session_state.tracker[date_key]["stories"], key=f"s_{date_key}")
-        mailings = st.number_input("Рассылки", 0, 30, st.session_state.tracker[date_key]["mailings"], key=f"m_{date_key}")
+        stories = st.number_input("Сторис", 0, 20, int(st.session_state.tracker[date_key].get("stories", 0)), key=f"s_{date_key}")
+        mailings = st.number_input("Рассылки", 0, 30, int(st.session_state.tracker[date_key].get("mailings", 0)), key=f"m_{date_key}")
 
     if st.button("💾 Сохранить день", use_container_width=True):
         st.session_state.tracker[date_key] = {
@@ -262,7 +266,7 @@ else:
             "stories": stories, "mailings": mailings
         }
         save_tracker(st.session_state.tracker)
-        st.success("Сохранено")
+        st.success("Сохранено и записано в файл")
 
     st.write("---")
     st.subheader("Итог за период")
@@ -277,7 +281,7 @@ else:
         if d in st.session_state.tracker:
             days_filled += 1
             for k in total:
-                total[k] += st.session_state.tracker[d][k]
+                total[k] += st.session_state.tracker[d].get(k, 0)
 
     st.metric("Дней заполнено", f"{days_filled} / {period_days}")
     c1, c2, c3, c4, c5 = st.columns(5)
@@ -293,7 +297,7 @@ else:
         st.dataframe(df.sort_index(ascending=False), use_container_width=True)
 
     st.download_button(
-        "⬇️ Скачать трекер (JSON)",
+        "⬇️ Скачать резервную копию трекера",
         data=json.dumps(st.session_state.tracker, ensure_ascii=False, indent=2),
         file_name="tracker_backup.json",
         mime="application/json"
