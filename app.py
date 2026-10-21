@@ -82,7 +82,7 @@ with st.sidebar:
     if not api_key and "XAI_API_KEY" in st.secrets:
         api_key = st.secrets["XAI_API_KEY"]
     provider = st.selectbox("Провайдер", ["Grok (xAI)", "OpenAI"])
-    model = st.text_input("Модель", value="grok-2-latest" if "Grok" in provider else "gpt-4o")
+    model = st.text_input("Модель", value="grok-4.7", key="model_name")
 
 def get_client():
     if not api_key:
