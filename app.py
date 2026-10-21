@@ -51,15 +51,21 @@ def save_tracker(data):
 
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="centered")
 
+# Исправление CSS для бага с фиолетовыми цифрами на ползунках
 st.markdown("""
 <style>
+div[data-testid="stThumbValue"] {
+    background-color: transparent !important;
+    color: #31333F !important;
+    font-weight: 600 !important;
+}
 .stButton > button {
-    border-radius: 12px !important;
-    border: 1.5px solid #7c3aed !important;
-    color: #7c3aed !important;
+    border-radius: 8px !important;
+    border: 1.5px solid #ff4b4b !important;
+    color: #ff4b4b !important;
 }
 .stButton > button:hover {
-    background: #7c3aed !important;
+    background: #ff4b4b !important;
     color: white !important;
 }
 </style>
@@ -76,7 +82,7 @@ with st.sidebar:
     if not api_key and "XAI_API_KEY" in st.secrets:
         api_key = st.secrets["XAI_API_KEY"]
     provider = st.selectbox("Провайдер", ["Grok (xAI)", "OpenAI"])
-    model = st.text_input("Модель", value="grok-4.7" if "Grok" in provider else "gpt-4o")
+    model = st.text_input("Модель", value="grok-2-latest" if "Grok" in provider else "gpt-4o")
 
 def get_client():
     if not api_key:
@@ -91,8 +97,8 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
     client = get_client()
     if not client:
         return None
-    fetish_str = ", ".join(fetishes) if fetishes else "смешанные"
     
+    fetish_str = ", ".join(fetishes) if fetishes else "смешанные"
     prompt = PERSONA + f"\nФетиши: {fetish_str}\n\nСгенерируй ТОЛЬКО запрошенные разделы:\n\n"
     
     if gen_content:
@@ -122,7 +128,6 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 **Перевод:** полный русский перевод
 Укажи: бесплатный крючок или с намёком на PPV.
 Если PPV — кратко что приложить и примерную цену.
-
 Не делай цепочку из 4 этапов. Только отдельные сильные рассылки.
 """
     
