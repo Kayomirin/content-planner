@@ -2,6 +2,8 @@ import streamlit as st
 from openai import OpenAI
 from datetime import date, timedelta
 import pandas as pd
+import json
+import os
 
 PERSONA = """
 Ты — элитный сценарист и контент-креатор для платформ Fansly и LoyalFans.
@@ -29,6 +31,21 @@ DEFAULT_FETISHES = [
     "Latex & Leather Fetish", "Gloves Fetish"
 ]
 
+TRACKER_FILE = "tracker_data.json"
+
+def load_tracker():
+    if os.path.exists(TRACKER_FILE):
+        try:
+            with open(TRACKER_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def save_tracker(data):
+    with open(TRACKER_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="centered")
 
 st.markdown("""
@@ -44,15 +61,13 @@ st.markdown("""
     background: #a855f7 !important;
     color: white !important;
 }
-/* Фиолетовые ползунки */
-.stSlider > div > div > div > div {
-    background-color: #a855f7 !important;
-}
-.stSlider > div > div > div > div > div {
+div[data-testid="stSlider"] div[role="slider"] {
     background-color: #7c3aed !important;
-    border-color: #7c3aed !important;
 }
-div[data-baseweb="slider"] > div > div {
+div[data-testid="stSlider"] > div > div > div {
+    background: linear-gradient(to right, #a855f7, #a855f7) !important;
+}
+[data-baseweb="slider"] div {
     background-color: #a855f7 !important;
 }
 </style>
@@ -61,7 +76,7 @@ div[data-baseweb="slider"] > div > div {
 if "result" not in st.session_state:
     st.session_state.result = None
 if "tracker" not in st.session_state:
-    st.session_state.tracker = {}
+    st.session_state.tracker = load_tracker()
 
 with st.sidebar:
     st.header("🔑 API")
@@ -246,6 +261,7 @@ else:
             "posts": posts, "videos": videos, "audios": audios,
             "stories": stories, "mailings": mailings
         }
+        save_tracker(st.session_state.tracker)
         st.success("Сохранено")
 
     st.write("---")
@@ -275,3 +291,10 @@ else:
         df = pd.DataFrame.from_dict(st.session_state.tracker, orient="index")
         df.index.name = "Дата"
         st.dataframe(df.sort_index(ascending=False), use_container_width=True)
+
+    st.download_button(
+        "⬇️ Скачать трекер (JSON)",
+        data=json.dumps(st.session_state.tracker, ensure_ascii=False, indent=2),
+        file_name="tracker_backup.json",
+        mime="application/json"
+    )
