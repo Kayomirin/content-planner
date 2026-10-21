@@ -44,6 +44,17 @@ st.markdown("""
     background: #a855f7 !important;
     color: white !important;
 }
+/* Фиолетовые ползунки */
+.stSlider > div > div > div > div {
+    background-color: #a855f7 !important;
+}
+.stSlider > div > div > div > div > div {
+    background-color: #7c3aed !important;
+    border-color: #7c3aed !important;
+}
+div[data-baseweb="slider"] > div > div {
+    background-color: #a855f7 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -96,17 +107,16 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 
 ## РАССЫЛКИ
 Сгенерируй ровно {n_mailing_days} отдельных независимых рассылок под выбранные фетиши.
-Каждая рассылка — самостоятельное сообщение, не часть цепочки.
+Каждая рассылка — самостоятельное сообщение.
 
-Для каждой рассылки:
-- Начни с ### Рассылка N
-- Короткий цепляющий текст на английском (обязательно с {{name}})
-- Сразу под ним полный перевод на русский
-- Укажи, это бесплатный крючок или с намёком на платный контент
-- Если есть намёк на PPV — кратко напиши, что можно приложить (фото/видео) и примерную цену
+Для каждой:
+### Рассылка N
+Текст на английском с {{name}}
+**Перевод:** полный русский перевод
+Укажи: бесплатный крючок или с намёком на PPV.
+Если PPV — кратко что приложить и примерную цену.
 
-Не используй структуру Morning Hook / Daytime / Evening PPV / Bump.
-Просто сильные отдельные сообщения, которые можно отправлять по одному.
+Не делай цепочку из 4 этапов. Только отдельные сильные рассылки.
 """
     
     if gen_bundles:
@@ -160,10 +170,8 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         st.error(str(e))
         return None
 
-# Переключатель страниц
 page = st.radio("Режим", ["📝 Генератор", "📊 Трекер"], horizontal=True, label_visibility="collapsed")
 
-# ====================== ГЕНЕРАТОР ======================
 if page == "📝 Генератор":
     st.title("🔥 Контент-планнер")
     st.subheader("Настройки")
@@ -176,7 +184,7 @@ if page == "📝 Генератор":
     with col2:
         video_minutes = st.slider("Длит. видео (мин)", 1, 20, 5)
         audio_minutes = st.slider("Длит. аудио (мин)", 1, 15, 5)
-        n_mailing_days = st.slider("Дней рассылок", 0, 14, 1)
+        n_mailing_days = st.slider("Количество рассылок", 0, 14, 1)
 
     period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
     fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["Foot Fetish"])
@@ -212,7 +220,6 @@ if page == "📝 Генератор":
         with st.expander("Скопировать весь текст"):
             st.code(st.session_state.result)
 
-# ====================== ТРЕКЕР ======================
 else:
     st.title("📊 Трекер контента")
     today = date.today()
