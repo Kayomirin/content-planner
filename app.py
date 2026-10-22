@@ -6,10 +6,12 @@ import json
 import os
 
 PERSONA = """
-Ты — элитный сценарист и контент-креатор для платформ Fansly и LoyalFans.
-Твоя персона: Mistress Kayomi. Тебе 25 лет. Ты — Soft Domme.
-Тон: властный, соблазнительный, высокомерный, но обволакивающий.
-Если выбраны жёсткие фетиши — добавляй давление и обесценивание.
+Ты — элитный сценарист и контент-креатор для платформ BestFans и LoyalFans.
+Твоя персона: Mistress Kayomi. Тебе 25 лет. Ты — игривая мягкая Soft Domme (примерно 70% доминирование / 30% сабмиссивность).
+Ты не жёсткая домина и не сексуальная стерва. Ты улыбчивая, живая и немного дразнящая — та, которая смотрит, улыбается и мягко управляет настроением.
+Ты можешь быть тёплой и игривой, но при необходимости — строго приказать.
+Тон: властный, но обволакивающий, соблазнительный, с лёгкой насмешкой и теплом.
+Если выбраны жёсткие фетиши — добавляй давление и обесценивание, но сохраняй игривость.
 Правила: основной контент на идеальном английском + перевод на русский. Никогда не упоминай Россию или рубли.
 Фразы в диалогах — короткие и естественные.
 """
@@ -31,41 +33,37 @@ DEFAULT_FETISHES = [
     "Latex & Leather Fetish", "Gloves Fetish"
 ]
 
+POST_SLOTS = ["00:30", "04:30", "08:30", "12:30", "16:30", "20:30"]
 TRACKER_FILE = "tracker_data.json"
+SCHEDULE_FILE = "schedule_data.json"
 
-def load_tracker():
-    if os.path.exists(TRACKER_FILE):
+def load_json(path):
+    if os.path.exists(path):
         try:
-            with open(TRACKER_FILE, "r", encoding="utf-8") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except:
             return {}
     return {}
 
-def save_tracker(data):
+def save_json(path, data):
     try:
-        with open(TRACKER_FILE, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         st.warning(f"Не удалось сохранить: {e}")
 
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="centered")
 
-# Исправление CSS для бага с фиолетовыми цифрами на ползунках
 st.markdown("""
 <style>
-div[data-testid="stThumbValue"] {
-    background-color: transparent !important;
-    color: #31333F !important;
-    font-weight: 600 !important;
-}
 .stButton > button {
-    border-radius: 8px !important;
-    border: 1.5px solid #ff4b4b !important;
-    color: #ff4b4b !important;
+    border-radius: 12px !important;
+    border: 1.5px solid #7c3aed !important;
+    color: #7c3aed !important;
 }
 .stButton > button:hover {
-    background: #ff4b4b !important;
+    background: #7c3aed !important;
     color: white !important;
 }
 </style>
@@ -74,7 +72,9 @@ div[data-testid="stThumbValue"] {
 if "result" not in st.session_state:
     st.session_state.result = None
 if "tracker" not in st.session_state:
-    st.session_state.tracker = load_tracker()
+    st.session_state.tracker = load_json(TRACKER_FILE)
+if "schedule" not in st.session_state:
+    st.session_state.schedule = load_json(SCHEDULE_FILE)
 
 with st.sidebar:
     st.header("🔑 API")
@@ -82,7 +82,7 @@ with st.sidebar:
     if not api_key and "XAI_API_KEY" in st.secrets:
         api_key = st.secrets["XAI_API_KEY"]
     provider = st.selectbox("Провайдер", ["Grok (xAI)", "OpenAI"])
-    model = st.text_input("Модель", value="grok-4.7", key="model_name")
+    model = st.text_input("Модель", value="grok-4.7")
 
 def get_client():
     if not api_key:
@@ -93,12 +93,12 @@ def get_client():
     return OpenAI(api_key=api_key)
 
 def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes, audio_minutes,
-             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1, call_prompt=""):
+             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1, call_prompt="", photo_prompt=""):
     client = get_client()
     if not client:
         return None
-    
     fetish_str = ", ".join(fetishes) if fetishes else "смешанные"
+    
     prompt = PERSONA + f"\nФетиши: {fetish_str}\n\nСгенерируй ТОЛЬКО запрошенные разделы:\n\n"
     
     if gen_content:
@@ -128,6 +128,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 **Перевод:** полный русский перевод
 Укажи: бесплатный крючок или с намёком на PPV.
 Если PPV — кратко что приложить и примерную цену.
+
 Не делай цепочку из 4 этапов. Только отдельные сильные рассылки.
 """
     
@@ -167,7 +168,24 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 В конце 2 варианта концовки (кончил / не кончил).
 """
     
-    if not (gen_content or gen_bundles or gen_sexting or call_prompt.strip()):
+    if photo_prompt.strip():
+        prompt += f"""
+## ПОСТ ПО ФОТО/ВИДЕО
+Описание того, что на фото или видео: {photo_prompt}
+
+Напиши один готовый пост в стиле Mistress Kayomi (игривая Soft Domme).
+Формат:
+**English:**
+текст поста
+
+**Русский:**
+полный перевод
+
+Пост должен быть цепляющим, с лёгкой насмешкой, теплом или контролем, если это подходит под описание.
+Не выбирай фетиш самостоятельно, опирайся только на описание.
+"""
+    
+    if not (gen_content or gen_bundles or gen_sexting or call_prompt.strip() or photo_prompt.strip()):
         return "Ничего не выбрано."
     
     try:
@@ -182,7 +200,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         st.error(str(e))
         return None
 
-page = st.radio("Режим", ["📝 Генератор", "📊 Трекер"], horizontal=True, label_visibility="collapsed")
+page = st.radio("Режим", ["📝 Генератор", "📊 Трекер", "📅 Расписание постов"], horizontal=True, label_visibility="collapsed")
 
 if page == "📝 Генератор":
     st.title("🔥 Контент-планнер")
@@ -190,14 +208,14 @@ if page == "📝 Генератор":
     
     col1, col2 = st.columns(2)
     with col1:
-        n_posts = st.slider("Посты", 0, 15, 0)
-        n_videos = st.slider("Видео", 0, 8, 0)
-        n_audios = st.slider("Аудио", 0, 5, 0)
+        n_posts = st.slider("Посты", 0, 15, 3)
+        n_videos = st.slider("Видео", 0, 8, 1)
+        n_audios = st.slider("Аудио", 0, 5, 1)
     with col2:
         video_minutes = st.slider("Длит. видео (мин)", 1, 20, 5)
         audio_minutes = st.slider("Длит. аудио (мин)", 1, 15, 5)
-        n_mailing_days = st.slider("Количество рассылок", 0, 14, 0)
-        
+        n_mailing_days = st.slider("Количество рассылок", 0, 14, 1)
+
     period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
     fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["Foot Fetish"])
 
@@ -218,12 +236,19 @@ if page == "📝 Генератор":
     st.write("---")
     call_prompt = st.text_area("Сценарий для звонка (необязательно)", height=80, placeholder="Тема, длительность, триггерные фразы...")
 
+    st.write("---")
+    photo_prompt = st.text_area(
+        "Пост по фото/видео (опиши, что на фото или видео)",
+        height=100,
+        placeholder="Например: достаю губную помаду в виде маленького члена, смотрю на неё и слегка насмехаюсь..."
+    )
+
     if st.button("🚀 Сгенерировать", type="primary", use_container_width=True):
         with st.spinner("Генерирую..."):
             st.session_state.result = generate(
                 period, n_posts, n_videos, n_audios, fetishes,
                 n_mailing_days, video_minutes, audio_minutes,
-                gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt
+                gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt, photo_prompt
             )
 
     if st.session_state.result:
@@ -232,10 +257,10 @@ if page == "📝 Генератор":
         with st.expander("Скопировать весь текст"):
             st.code(st.session_state.result)
 
-else:
+elif page == "📊 Трекер":
     st.title("📊 Трекер контента")
     today = date.today()
-    selected_date = st.date_input("Дата", today)
+    selected_date = st.date_input("Дата", today, key="tracker_date")
 
     date_key = str(selected_date)
     if date_key not in st.session_state.tracker:
@@ -258,7 +283,7 @@ else:
             "posts": posts, "videos": videos, "audios": audios,
             "stories": stories, "mailings": mailings
         }
-        save_tracker(st.session_state.tracker)
+        save_json(TRACKER_FILE, st.session_state.tracker)
         st.success("Сохранено")
 
     st.write("---")
@@ -293,5 +318,51 @@ else:
         "⬇️ Скачать копию трекера",
         data=json.dumps(st.session_state.tracker, ensure_ascii=False, indent=2),
         file_name="tracker_backup.json",
+        mime="application/json"
+    )
+
+else:
+    st.title("📅 Расписание постов")
+    today = date.today()
+    selected_date = st.date_input("Дата", today, key="schedule_date")
+    date_key = str(selected_date)
+
+    if date_key not in st.session_state.schedule:
+        st.session_state.schedule[date_key] = {slot: False for slot in POST_SLOTS}
+
+    st.write(f"**Слоты на {selected_date.strftime('%d.%m.%Y')}**")
+    st.caption("Отмечай галочкой слоты, которые уже заняты / сделаны, чтобы не дублировать.")
+
+    cols = st.columns(3)
+    updated = False
+    for i, slot in enumerate(POST_SLOTS):
+        with cols[i % 3]:
+            checked = st.checkbox(
+                slot,
+                value=st.session_state.schedule[date_key].get(slot, False),
+                key=f"slot_{date_key}_{slot}"
+            )
+            if checked != st.session_state.schedule[date_key].get(slot, False):
+                st.session_state.schedule[date_key][slot] = checked
+                updated = True
+
+    if updated or st.button("💾 Сохранить расписание", use_container_width=True):
+        save_json(SCHEDULE_FILE, st.session_state.schedule)
+        st.success("Расписание сохранено")
+
+    st.write("---")
+    st.subheader("Обзор на неделю")
+    week_start = selected_date - timedelta(days=selected_date.weekday())
+    for i in range(7):
+        d = week_start + timedelta(days=i)
+        d_key = str(d)
+        slots = st.session_state.schedule.get(d_key, {})
+        done = sum(1 for v in slots.values() if v)
+        st.write(f"**{d.strftime('%d.%m %a')}**: {done}/6 слотов занято")
+
+    st.download_button(
+        "⬇️ Скачать расписание",
+        data=json.dumps(st.session_state.schedule, ensure_ascii=False, indent=2),
+        file_name="schedule_backup.json",
         mime="application/json"
     )
