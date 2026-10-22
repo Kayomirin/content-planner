@@ -206,15 +206,15 @@ if page == "📝 Генератор":
     st.title("🔥 Контент-планнер")
     st.subheader("Настройки")
     
-    col1, col2 = st.columns(2)
+       col1, col2 = st.columns(2)
     with col1:
-        n_posts = st.slider("Посты", 0, 15, 3)
-        n_videos = st.slider("Видео", 0, 8, 1)
-        n_audios = st.slider("Аудио", 0, 5, 1)
+        n_posts = st.slider("Посты", 0, 15, 0)
+        n_videos = st.slider("Видео", 0, 8, 0)
+        n_audios = st.slider("Аудио", 0, 5, 0)
     with col2:
         video_minutes = st.slider("Длит. видео (мин)", 1, 20, 5)
         audio_minutes = st.slider("Длит. аудио (мин)", 1, 15, 5)
-        n_mailing_days = st.slider("Количество рассылок", 0, 14, 1)
+        n_mailing_days = st.slider("Количество рассылок", 0, 14, 0)
 
     period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
     fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["Foot Fetish"])
