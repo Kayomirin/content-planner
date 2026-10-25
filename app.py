@@ -4,6 +4,7 @@ from datetime import date, timedelta
 import pandas as pd
 import json
 import os
+import base64
 
 PERSONA = """
 Ты — элитный сценарист и контент-креатор для платформ BestFans и LoyalFans.
@@ -56,6 +57,9 @@ def save_json(path, data):
     except Exception as e:
         st.warning(f"Не удалось сохранить: {e}")
 
+def encode_image(uploaded_file):
+    return base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
+
 st.set_page_config(page_title="Контент-планнер", page_icon="🔥", layout="centered")
 
 st.markdown("""
@@ -96,16 +100,18 @@ def get_client():
     return OpenAI(api_key=api_key)
 
 def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes, audio_minutes,
-             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1, call_prompt="", photo_prompt=""):
+             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1, call_prompt="", photo_prompt="", uploaded_image=None):
     client = get_client()
     if not client:
         return None
     fetish_str = ", ".join(fetishes) if fetishes else "смешанные"
     
-    prompt = PERSONA + f"\nФетиши: {fetish_str}\n\nСгенерируй ТОЛЬКО запрошенные разделы:\n\n"
+    base_prompt = PERSONA + f"\nФетиши: {fetish_str}\n\nСгенерируй ТОЛЬКО запрошенные разделы:\n\n"
+    
+    content_parts = [{"type": "text", "text": base_prompt}]
     
     if gen_content:
-        prompt += f"""## ПОСТЫ
+        content_parts[0]["text"] += f"""## ПОСТЫ
 Ровно {n_posts} постов. Английский + перевод + кратко советы по фото (на русском).
 
 ## ВИДЕО
@@ -136,7 +142,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 """
     
     if gen_bundles:
-        prompt += f"""
+        content_parts[0]["text"] += f"""
 ## БАНДЛЫ
 Ровно {n_bundles} бандлов. Для каждого:
 **Тема:** (на английском)
@@ -148,7 +154,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 """
     
     if gen_sexting:
-        prompt += """
+        content_parts[0]["text"] += """
 ## СЕКСТИНГ-ПАК
 Весь раздел на русском.
 Разбей на части.
@@ -157,7 +163,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 """
     
     if call_prompt.strip():
-        prompt += f"""
+        content_parts[0]["text"] += f"""
 ## СЦЕНАРИЙ ЗВОНКА
 Запрос: {call_prompt}
 
@@ -171,11 +177,15 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 В конце 2 варианта концовки (кончил / не кончил).
 """
     
-    if photo_prompt.strip():
-        prompt += f"""
+    if photo_prompt.strip() or uploaded_image:
+        photo_text = f"""
 ## ПОСТ ПО ФОТО/ВИДЕО
-Описание того, что на фото или видео: {photo_prompt}
-
+"""
+        if photo_prompt.strip():
+            photo_text += f"Дополнительное описание: {photo_prompt}\n"
+        if uploaded_image:
+            photo_text += "Посмотри на загруженное фото и напиши пост на его основе.\n"
+        photo_text += """
 Напиши один готовый пост в стиле Mistress Kayomi (игривая Soft Domme).
 Формат:
 **English:**
@@ -184,17 +194,25 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 **Русский:**
 полный перевод
 
-Пост должен быть цепляющим, с лёгкой насмешкой, теплом или контролем, если это подходит под описание.
-Не выбирай фетиш самостоятельно, опирайся только на описание.
+Пост должен быть цепляющим, с лёгкой насмешкой, теплом или контролем.
 """
+        content_parts[0]["text"] += photo_text
+        
+        if uploaded_image:
+            base64_image = encode_image(uploaded_image)
+            content_parts.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+            })
     
-    if not (gen_content or gen_bundles or gen_sexting or call_prompt.strip() or photo_prompt.strip()):
+    if not (gen_content or gen_bundles or gen_sexting or call_prompt.strip() or photo_prompt.strip() or uploaded_image):
         return "Ничего не выбрано."
     
     try:
+        messages = [{"role": "user", "content": content_parts}]
         r = client.chat.completions.create(
             model=model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             temperature=0.8,
             max_tokens=8000
         )
@@ -241,17 +259,18 @@ if page == "📝 Генератор":
 
     st.write("---")
     photo_prompt = st.text_area(
-        "Пост по фото/видео (опиши, что на фото или видео)",
-        height=100,
-        placeholder="Например: достаю губную помаду в виде маленького члена, смотрю на неё и слегка насмехаюсь..."
+        "Пост по фото/видео (опиши или загрузи фото ниже)",
+        height=80,
+        placeholder="Можно оставить пустым, если загружаешь фото..."
     )
+    uploaded_image = st.file_uploader("Загрузить фото для поста", type=["jpg", "jpeg", "png"])
 
     if st.button("🚀 Сгенерировать", type="primary", use_container_width=True):
         with st.spinner("Генерирую..."):
             st.session_state.result = generate(
                 period, n_posts, n_videos, n_audios, fetishes,
                 n_mailing_days, video_minutes, audio_minutes,
-                gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt, photo_prompt
+                gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt, photo_prompt, uploaded_image
             )
 
     if st.session_state.result:
