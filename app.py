@@ -238,7 +238,7 @@ if page == "📝 Генератор":
         n_mailing_days = st.slider("Количество рассылок", 0, 14, 0)
 
     period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
-    fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES, default=["Foot Fetish"])
+    fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES)
 
     st.write("")
     c1, c2, c3 = st.columns(3)
