@@ -77,7 +77,8 @@ def get_client():
     return OpenAI(api_key=api_key)
 
 def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes, audio_minutes,
-             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1, call_prompt="", photo_prompt="", uploaded_image=None):
+             gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1, call_prompt="", photo_prompt="", uploaded_image=None,
+             bundle_extra="", sexting_extra=""):
     client = get_client()
     if not client:
         return None
@@ -119,6 +120,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 """
     
     if gen_bundles:
+        extra = f"\nДополнительно (одежда / тема / пожелания): {bundle_extra}" if bundle_extra.strip() else ""
         content_parts[0]["text"] += f"""
 ## БАНДЛЫ
 Ровно {n_bundles} бандлов. Для каждого:
@@ -128,15 +130,18 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 **Описание для продажи:** (на английском)
 **Рекомендуемая цена:**
 **Хештеги:** ровно 10 на английском
+{extra}
 """
     
     if gen_sexting:
-        content_parts[0]["text"] += """
+        extra = f"\nДополнительно (одежда / тема / пожелания): {sexting_extra}" if sexting_extra.strip() else ""
+        content_parts[0]["text"] += f"""
 ## СЕКСТИНГ-ПАК
 Весь раздел на русском.
 Разбей на части.
 Для каждой части: что снимать, сколько фото/видео, примерная цена, короткий скрипт.
 В конце общая рекомендация.
+{extra}
 """
     
     if call_prompt.strip():
@@ -225,8 +230,15 @@ with c3:
 
 if gen_bundles:
     n_bundles = st.number_input("Сколько бандлов", 1, 5, 1)
+    bundle_extra = st.text_area("Одежда / тема / пожелания для бандла", height=70, placeholder="Например: чёрное бельё, джинсы, босиком, в носках...")
 else:
     n_bundles = 1
+    bundle_extra = ""
+
+if gen_sexting:
+    sexting_extra = st.text_area("Одежда / тема / пожелания для секстинг-пака", height=70, placeholder="Например: колготки, каблуки, домашняя одежда, футовый фокус...")
+else:
+    sexting_extra = ""
 
 st.write("---")
 call_prompt = st.text_area("Сценарий для звонка (необязательно)", height=80, placeholder="Тема, длительность, триггерные фразы...")
@@ -244,7 +256,8 @@ if st.button("🚀 Сгенерировать", type="primary", use_container_wi
         st.session_state.result = generate(
             period, n_posts, n_videos, n_audios, fetishes,
             n_mailing_days, video_minutes, audio_minutes,
-            gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt, photo_prompt, uploaded_image
+            gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt, photo_prompt, uploaded_image,
+            bundle_extra, sexting_extra
         )
 
 if st.session_state.result:
