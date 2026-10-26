@@ -1,21 +1,18 @@
 import streamlit as st
 from openai import OpenAI
-from datetime import date, timedelta
-import pandas as pd
-import json
-import os
 import base64
 
 PERSONA = """
-Ты — элитный сценарист и контент-креатор для платформ BestFans и LoyalFans.
-Твоя персона: Mistress Kayomi. Игривая домина с правом выбора.
-Основной тон — дразнящий, лёгкий, с улыбкой. Можешь резко взять контроль, отдать приказ, унизить или забрать деньги, но не обязана быть жёсткой постоянно. Ты не cold hard domme.
-Переключаешься:
-- ~70–80% времени — игривая/доминирующая (дразнишь, улыбаешься, потом приказываешь или забираешь)
-- ~20–30% — можешь быть более покорной / саб-моменты (только по желанию и за отдельную оплату)
-Не врёшь характером. Если на стриме улыбаешься и играешь — в постах тоже не надо изображать ледяную богиню 24/7. Можешь быть милой, можешь быть жёсткой. Решаешь ты.
-Ключевые черты: игривая, дразнящая, умеешь приказывать, не всегда жёсткая, гибкая, attention is earned, любишь, когда платят.
-Стиль общения: подкол + улыбка + внезапный контроль. Не постоянная агрессия.
+Ты — элитный сценарист и контент-креатор для платформ LoyalFans, BestFans и Fansly.
+Твоя персона: Kayomi — Foot Fetish Brat Findom.
+Sweet smile. Dangerous intentions.
+Ты избалованная, дразнящая девочка, которая точно знает, чего хочет. Игривая, с улыбкой, но с опасными намерениями.
+Что ты даёшь:
+- Foot fetish content and teasing
+- Femdom / Mistress vibes — только когда ты в настроении взять контроль
+- Findom — потому что твоё внимание это привилегия, которую нужно заслужить
+Ты дразнишь, забираешь своё и не раздаёшь внимание бесплатно. Можешь быть милой или доминировать — всегда на своих условиях.
+Стиль: подкол + улыбка + внезапный контроль. Не постоянная жёсткость.
 Правила: основной контент на идеальном английском + перевод на русский. Никогда не упоминай Россию или рубли.
 Фразы в диалогах — короткие и естественные.
 """
@@ -37,25 +34,9 @@ DEFAULT_FETISHES = [
     "Latex & Leather Fetish", "Gloves Fetish"
 ]
 
-POST_SLOTS = ["00:30", "04:30", "08:30", "12:30", "16:30", "20:30"]
-TRACKER_FILE = "tracker_data.json"
-SCHEDULE_FILE = "schedule_data.json"
-
-def load_json(path):
-    if os.path.exists(path):
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return {}
-    return {}
-
-def save_json(path, data):
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        st.warning(f"Не удалось сохранить: {e}")
+MY_HASHTAGS = """
+#feet #footfetish #footworship #soles #toes #barefeet #feetworship #arches #toespread #footjob #softdomme #FemDom #domme #mistress #Goddess #sexygoddess #brat #princess #obey #slave #worship #bodyworship #FinDom #findomme #financialdomination #paypig #humanATM #obeyandpay #findomgame #piggy #tease #teasing #teaseanddenial #lingerie #panties #pantyhose #stockings #socks #heels #highheels #fishnets #nylons #legs #ass #assworship #booty #curves #SPH #dickrating #smallpenis #smalldick #humiliation #degradation #joi #middlefinger #gaze #brunette #natural #kinkyfantasy #Sexting #dirtytalk #pov #submissive #serving
+"""
 
 def encode_image(uploaded_file):
     return base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
@@ -78,10 +59,6 @@ st.markdown("""
 
 if "result" not in st.session_state:
     st.session_state.result = None
-if "tracker" not in st.session_state:
-    st.session_state.tracker = load_json(TRACKER_FILE)
-if "schedule" not in st.session_state:
-    st.session_state.schedule = load_json(SCHEDULE_FILE)
 
 with st.sidebar:
     st.header("🔑 API")
@@ -106,7 +83,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         return None
     fetish_str = ", ".join(fetishes) if fetishes else "смешанные"
     
-    base_prompt = PERSONA + f"\nФетиши: {fetish_str}\n\nСгенерируй ТОЛЬКО запрошенные разделы:\n\n"
+    base_prompt = PERSONA + f"\nФетиши: {fetish_str}\n\nИспользуй релевантные хештеги из этого списка, когда нужно:\n{MY_HASHTAGS}\n\nСгенерируй ТОЛЬКО запрошенные разделы:\n\n"
     
     content_parts = [{"type": "text", "text": base_prompt}]
     
@@ -178,7 +155,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 """
     
     if photo_prompt.strip() or uploaded_image:
-        photo_text = f"""
+        photo_text = """
 ## ПОСТ ПО ФОТО/ВИДЕО
 """
         if photo_prompt.strip():
@@ -186,7 +163,7 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         if uploaded_image:
             photo_text += "Посмотри на загруженное фото и напиши пост на его основе.\n"
         photo_text += """
-Напиши один готовый пост в стиле Mistress Kayomi (игривая Soft Domme).
+Напиши один готовый пост в стиле Kayomi (игривая Soft Domme / Brat Findom).
 Формат:
 **English:**
 текст поста
@@ -221,170 +198,57 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         st.error(str(e))
         return None
 
-page = st.radio("Режим", ["📝 Генератор", "📊 Трекер", "📅 Расписание постов"], horizontal=True, label_visibility="collapsed")
+st.title("🔥 Контент-планнер")
+st.subheader("Настройки")
 
-if page == "📝 Генератор":
-    st.title("🔥 Контент-планнер")
-    st.subheader("Настройки")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        n_posts = st.slider("Посты", 0, 15, 0)
-        n_videos = st.slider("Видео", 0, 8, 0)
-        n_audios = st.slider("Аудио", 0, 5, 0)
-    with col2:
-        video_minutes = st.slider("Длит. видео (мин)", 1, 20, 5)
-        audio_minutes = st.slider("Длит. аудио (мин)", 1, 15, 5)
-        n_mailing_days = st.slider("Количество рассылок", 0, 14, 0)
+col1, col2 = st.columns(2)
+with col1:
+    n_posts = st.slider("Посты", 0, 15, 0)
+    n_videos = st.slider("Видео", 0, 8, 0)
+    n_audios = st.slider("Аудио", 0, 5, 0)
+with col2:
+    video_minutes = st.slider("Длит. видео (мин)", 1, 20, 5)
+    audio_minutes = st.slider("Длит. аудио (мин)", 1, 15, 5)
+    n_mailing_days = st.slider("Количество рассылок", 0, 14, 0)
 
-    period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
-    fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES)
+period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
+fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES)
 
-    st.write("")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        gen_content = st.checkbox("Основной контент", value=True)
-    with c2:
-        gen_bundles = st.checkbox("Бандлы", value=False)
-    with c3:
-        gen_sexting = st.checkbox("Секстинг-пак", value=False)
+st.write("")
+c1, c2, c3 = st.columns(3)
+with c1:
+    gen_content = st.checkbox("Основной контент", value=True)
+with c2:
+    gen_bundles = st.checkbox("Бандлы", value=False)
+with c3:
+    gen_sexting = st.checkbox("Секстинг-пак", value=False)
 
-    if gen_bundles:
-        n_bundles = st.number_input("Сколько бандлов", 1, 5, 1)
-    else:
-        n_bundles = 1
-
-    st.write("---")
-    call_prompt = st.text_area("Сценарий для звонка (необязательно)", height=80, placeholder="Тема, длительность, триггерные фразы...")
-
-    st.write("---")
-    photo_prompt = st.text_area(
-        "Пост по фото/видео (опиши или загрузи фото ниже)",
-        height=80,
-        placeholder="Можно оставить пустым, если загружаешь фото..."
-    )
-    uploaded_image = st.file_uploader("Загрузить фото для поста", type=["jpg", "jpeg", "png"])
-
-    if st.button("🚀 Сгенерировать", type="primary", use_container_width=True):
-        with st.spinner("Генерирую..."):
-            st.session_state.result = generate(
-                period, n_posts, n_videos, n_audios, fetishes,
-                n_mailing_days, video_minutes, audio_minutes,
-                gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt, photo_prompt, uploaded_image
-            )
-
-    if st.session_state.result:
-        st.divider()
-        st.markdown(st.session_state.result)
-        with st.expander("Скопировать весь текст"):
-            st.code(st.session_state.result)
-
-elif page == "📊 Трекер":
-    st.title("📊 Трекер контента")
-    today = date.today()
-    selected_date = st.date_input("Дата", today, key="tracker_date")
-
-    date_key = str(selected_date)
-    if date_key not in st.session_state.tracker:
-        st.session_state.tracker[date_key] = {
-            "posts": 0, "videos": 0, "audios": 0, "stories": 0, "mailings": 0
-        }
-
-    st.write("Сколько сделала:")
-    col1, col2 = st.columns(2)
-    with col1:
-        posts = st.number_input("Посты", 0, 20, int(st.session_state.tracker[date_key].get("posts", 0)), key=f"p_{date_key}")
-        videos = st.number_input("Видео", 0, 10, int(st.session_state.tracker[date_key].get("videos", 0)), key=f"v_{date_key}")
-        audios = st.number_input("Аудио", 0, 10, int(st.session_state.tracker[date_key].get("audios", 0)), key=f"a_{date_key}")
-    with col2:
-        stories = st.number_input("Сторис", 0, 20, int(st.session_state.tracker[date_key].get("stories", 0)), key=f"s_{date_key}")
-        mailings = st.number_input("Рассылки", 0, 30, int(st.session_state.tracker[date_key].get("mailings", 0)), key=f"m_{date_key}")
-
-    if st.button("💾 Сохранить день", use_container_width=True):
-        st.session_state.tracker[date_key] = {
-            "posts": posts, "videos": videos, "audios": audios,
-            "stories": stories, "mailings": mailings
-        }
-        save_json(TRACKER_FILE, st.session_state.tracker)
-        st.success("Сохранено")
-
-    st.write("---")
-    st.subheader("Итог за период")
-    period_days = st.selectbox("Период", [7, 14, 30], format_func=lambda x: f"Последние {x} дней")
-
-    start = today - timedelta(days=period_days - 1)
-    total = {"posts": 0, "videos": 0, "audios": 0, "stories": 0, "mailings": 0}
-    days_filled = 0
-
-    for i in range(period_days):
-        d = str(start + timedelta(days=i))
-        if d in st.session_state.tracker:
-            days_filled += 1
-            for k in total:
-                total[k] += st.session_state.tracker[d].get(k, 0)
-
-    st.metric("Дней заполнено", f"{days_filled} / {period_days}")
-    c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("Посты", total["posts"])
-    c2.metric("Видео", total["videos"])
-    c3.metric("Аудио", total["audios"])
-    c4.metric("Сторис", total["stories"])
-    c5.metric("Рассылки", total["mailings"])
-
-    if st.session_state.tracker:
-        df = pd.DataFrame.from_dict(st.session_state.tracker, orient="index")
-        df.index.name = "Дата"
-        st.dataframe(df.sort_index(ascending=False), use_container_width=True)
-
-    st.download_button(
-        "⬇️ Скачать копию трекера",
-        data=json.dumps(st.session_state.tracker, ensure_ascii=False, indent=2),
-        file_name="tracker_backup.json",
-        mime="application/json"
-    )
-
+if gen_bundles:
+    n_bundles = st.number_input("Сколько бандлов", 1, 5, 1)
 else:
-    st.title("📅 Расписание постов")
-    today = date.today()
-    selected_date = st.date_input("Дата", today, key="schedule_date")
-    date_key = str(selected_date)
+    n_bundles = 1
 
-    if date_key not in st.session_state.schedule:
-        st.session_state.schedule[date_key] = {slot: False for slot in POST_SLOTS}
+st.write("---")
+call_prompt = st.text_area("Сценарий для звонка (необязательно)", height=80, placeholder="Тема, длительность, триггерные фразы...")
 
-    st.write(f"**Слоты на {selected_date.strftime('%d.%m.%Y')}**")
-    st.caption("Отмечай галочкой слоты, которые уже заняты / сделаны, чтобы не дублировать.")
+st.write("---")
+photo_prompt = st.text_area(
+    "Пост по фото/видео (опиши или загрузи фото ниже)",
+    height=80,
+    placeholder="Можно оставить пустым, если загружаешь фото..."
+)
+uploaded_image = st.file_uploader("Загрузить фото для поста", type=["jpg", "jpeg", "png"])
 
-    cols = st.columns(3)
-    updated = False
-    for i, slot in enumerate(POST_SLOTS):
-        with cols[i % 3]:
-            checked = st.checkbox(
-                slot,
-                value=st.session_state.schedule[date_key].get(slot, False),
-                key=f"slot_{date_key}_{slot}"
-            )
-            if checked != st.session_state.schedule[date_key].get(slot, False):
-                st.session_state.schedule[date_key][slot] = checked
-                updated = True
+if st.button("🚀 Сгенерировать", type="primary", use_container_width=True):
+    with st.spinner("Генерирую..."):
+        st.session_state.result = generate(
+            period, n_posts, n_videos, n_audios, fetishes,
+            n_mailing_days, video_minutes, audio_minutes,
+            gen_content, gen_bundles, gen_sexting, n_bundles, call_prompt, photo_prompt, uploaded_image
+        )
 
-    if updated or st.button("💾 Сохранить расписание", use_container_width=True):
-        save_json(SCHEDULE_FILE, st.session_state.schedule)
-        st.success("Расписание сохранено")
-
-    st.write("---")
-    st.subheader("Обзор на неделю")
-    week_start = selected_date - timedelta(days=selected_date.weekday())
-    for i in range(7):
-        d = week_start + timedelta(days=i)
-        d_key = str(d)
-        slots = st.session_state.schedule.get(d_key, {})
-        done = sum(1 for v in slots.values() if v)
-        st.write(f"**{d.strftime('%d.%m %a')}**: {done}/6 слотов занято")
-
-    st.download_button(
-        "⬇️ Скачать расписание",
-        data=json.dumps(st.session_state.schedule, ensure_ascii=False, indent=2),
-        file_name="schedule_backup.json",
-        mime="application/json"
-    )
+if st.session_state.result:
+    st.divider()
+    st.markdown(st.session_state.result)
+    with st.expander("Скопировать весь текст"):
+        st.code(st.session_state.result)
