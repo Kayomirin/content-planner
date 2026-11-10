@@ -90,9 +90,10 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 Важно:
 - Делай контент в первую очередь под выбранные фетиши.
 - Не навязывай Findom автоматически.
-- Тексты должны быть наполненными, с смыслом, деталями и эмоциями. Не пиши коротко и пусто.
-- Для аудио и видео скрипты должны быть достаточно длинными, чтобы заполнить указанное время.
-- В видео и аудио перевод должен идти СРАЗУ после каждой английской части/абзаца, а не весь текст в конце.
+- Тексты должны быть наполненными, с смыслом, деталями и эмоциями.
+- Для аудио и видео скрипты должны быть достаточно длинными.
+- В видео и аудио перевод должен идти СРАЗУ после каждой английской части.
+- Для видео и аудио обязательно указывай примерную цену в зависимости от длительности и темы.
 
 Сгенерируй ТОЛЬКО запрошенные разделы:
 """
@@ -103,21 +104,15 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         content_parts[0]["text"] += f"""
 ## ПОСТЫ
 Ровно {n_posts} постов.
-Каждый пост: живой, цепляющий, с деталями под фетиш.
-Английский текст, сразу под ним полный перевод на русский.
+Английский текст, сразу под ним перевод.
 Кратко советы по фото (на русском).
 
 ## ВИДЕО
 Ровно {n_videos} видео.
 Название, описание, длительность примерно {video_minutes} минут.
-Сценарий пиши от лица Mistress Kayomi, обращаясь напрямую к рабу.
-Сделай его интересным, триггерным и чувственным.
-Пиши абзацами. После каждого английского абзаца СРАЗУ давай перевод на русский.
-Пример формата:
-[тайминг] English text here.
-Перевод: русский перевод.
-
-Включи тайминг и паузы.
+Сценарий от лица Kayomi к рабу. Интересный и чувственный.
+Пиши абзацами: английский текст, сразу под ним перевод.
+**Примерная цена:** укажи рекомендуемую цену (ориентир $3–6 за минуту, выше для жёстких/популярных фетишей вроде Findom, SPH, Trampling).
 **Советы по съёмке:** на русском.
 10 хештегов.
 
@@ -125,21 +120,14 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
 Ровно {n_audios} аудио.
 Название и описание.
 Длительность примерно {audio_minutes} минут.
-Скрипт наполненный и осмысленный под фетиш.
-Пиши от лица Kayomi, обращаясь к рабу.
-Пиши абзацами. После каждого английского абзаца СРАЗУ давай перевод на русский.
-Пример:
-[0:00–0:30] English text.
-Перевод: русский текст.
-
-Включи тайминг, паузы, изменения тона.
+Скрипт наполненный под фетиш.
+Пиши абзацами: английский, сразу перевод.
+**Примерная цена:** укажи рекомендуемую цену (ориентир $2–5 за минуту, можно выше для сильного контроля/Findom/SPH).
 10 хештегов.
 
 ## РАССЫЛКИ
-Сгенерируй ровно {n_mailing_days} отдельных независимых рассылок.
-Каждая — самостоятельное сильное сообщение с {{name}}.
-Английский + сразу полный перевод.
-Укажи, крючок или с намёком на PPV.
+Сгенерируй ровно {n_mailing_days} отдельных рассылок с {{name}}.
+Английский + сразу перевод.
 """
     
     if gen_bundles:
@@ -147,10 +135,10 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         content_parts[0]["text"] += f"""
 ## БАНДЛЫ
 Ровно {n_bundles} бандлов.
-**Тема:** 
+**Тема:**
 **Количество фото:**
 **Образы и позы:** (на русском)
-**Описание для продажи:** (на английском)
+**Описание для продажи:**
 **Рекомендуемая цена:**
 **Хештеги:** 10
 {extra}
@@ -160,42 +148,36 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         extra = f"\nДополнительно: {sexting_extra}" if sexting_extra.strip() else ""
         content_parts[0]["text"] += f"""
 ## СЕКСТИНГ-ПАК
-Весь раздел на русском.
-Разбей на части.
+На русском. Разбей на части с ценами.
 {extra}
 """
     
     if call_prompt.strip():
         content_parts[0]["text"] += f"""
 ## СЦЕНАРИЙ ЗВОНКА
-Запрос: {call_prompt}
-Диалог: фраза на английском + сразу перевод.
+{call_prompt}
+Фраза на английском + сразу перевод.
 """
     
     if photo_prompt.strip() or uploaded_image:
         photo_text = "\n## ПОСТ ПО ФОТО/ВИДЕО\n"
         if photo_prompt.strip():
-            photo_text += f"Описание: {photo_prompt}\n"
+            photo_text += f"{photo_prompt}\n"
         if uploaded_image:
-            photo_text += "Посмотри на фото и напиши пост.\n"
-        photo_text += "English текст, сразу под ним перевод.\n"
+            photo_text += "Посмотри на фото.\n"
+        photo_text += "English + сразу перевод.\n"
         content_parts[0]["text"] += photo_text
-        
         if uploaded_image:
             base64_image = encode_image(uploaded_image)
-            content_parts.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-            })
+            content_parts.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
     
     if not (gen_content or gen_bundles or gen_sexting or call_prompt.strip() or photo_prompt.strip() or uploaded_image):
         return "Ничего не выбрано."
     
     try:
-        messages = [{"role": "user", "content": content_parts}]
         r = client.chat.completions.create(
             model=model,
-            messages=messages,
+            messages=[{"role": "user", "content": content_parts}],
             temperature=0.85,
             max_tokens=8000
         )
@@ -220,7 +202,6 @@ with col2:
 period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
 fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES)
 
-st.write("")
 c1, c2, c3 = st.columns(3)
 with c1:
     gen_content = st.checkbox("Основной контент", value=True)
@@ -231,22 +212,21 @@ with c3:
 
 if gen_bundles:
     n_bundles = st.number_input("Сколько бандлов", 1, 5, 1)
-    bundle_extra = st.text_area("Одежда / тема / пожелания для бандла", height=70)
+    bundle_extra = st.text_area("Одежда / тема для бандла", height=70)
 else:
     n_bundles = 1
     bundle_extra = ""
 
 if gen_sexting:
-    sexting_extra = st.text_area("Одежда / тема / пожелания для секстинг-пака", height=70)
+    sexting_extra = st.text_area("Одежда / тема для секстинг-пака", height=70)
 else:
     sexting_extra = ""
 
 st.write("---")
-call_prompt = st.text_area("Сценарий для звонка (необязательно)", height=80)
-
+call_prompt = st.text_area("Сценарий для звонка", height=80)
 st.write("---")
-photo_prompt = st.text_area("Пост по фото/видео", height=80)
-uploaded_image = st.file_uploader("Загрузить фото для поста", type=["jpg", "jpeg", "png"])
+photo_prompt = st.text_area("Пост по фото", height=80)
+uploaded_image = st.file_uploader("Загрузить фото", type=["jpg", "jpeg", "png"])
 
 if st.button("🚀 Сгенерировать", type="primary", use_container_width=True):
     with st.spinner("Генерирую..."):
