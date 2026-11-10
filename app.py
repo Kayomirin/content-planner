@@ -15,7 +15,7 @@ Sweet smile. Dangerous intentions.
 """
 
 DEFAULT_FETISHES = [
-    "Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
+    "Foot Fetish", "Toe Worship", "Fingers Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
     "Pantyhose Fetish", "Fishnets", "High Heels", "Body Worship", "Ass Worship",
     "Breast Worship", "Armpit Fetish", "Hair Worship", "Hair Brushing", "Femdom",
     "Soft Domme", "Hard Findom", "Financial Domination", "Paypig Control",
