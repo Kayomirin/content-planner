@@ -11,13 +11,13 @@ Sweet smile. Dangerous intentions.
 Если выбраны конкретные фетиши — делай контент в первую очередь про них. Не навязывай Findom автоматически.
 Стиль: подкол + улыбка + контроль по настроению.
 Правила: основной контент на идеальном английском + перевод на русский. Никогда не упоминай Россию или рубли.
-Фразы в диалогах — короткие и естественные.
+Фразы короткие и естественные.
 """
 
 DEFAULT_FETISHES = [
-    "Foot Fetish", "Toe Worship", "Fingers Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
+    "Foot Fetish", "Toe Worship", "Crushing / Trampling", "Socks Fetish", "Striped Socks",
     "Pantyhose Fetish", "Fishnets", "High Heels", "Body Worship", "Ass Worship",
-    "Breast Worship", "Armpit Fetish", "Hair Worship", "ASMR", "Hair Brushing", "Femdom",
+    "Breast Worship", "Armpit Fetish", "Hair Worship", "Hair Brushing", "Femdom",
     "Soft Domme", "Hard Findom", "Financial Domination", "Paypig Control",
     "Total Power Exchange (TPE)", "Contracts & Control", "Mind Games", "Hypnosis",
     "Correction Training", "Spanking", "Humiliation", "Objectification",
@@ -75,25 +75,27 @@ def get_client():
 
 def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, video_minutes, audio_minutes,
              gen_content=True, gen_bundles=False, gen_sexting=False, n_bundles=1, call_prompt="", photo_prompt="", uploaded_image=None,
-             bundle_extra="", sexting_extra=""):
+             bundle_extra="", sexting_extra="", n_invites=0, dominance_level=5):
     client = get_client()
     if not client:
         return None
     fetish_str = ", ".join(fetishes) if fetishes else "смешанные"
     
+    dominance_desc = "очень мягкий флирт" if dominance_level <= 3 else "игривый с лёгким контролем" if dominance_level <= 6 else "более доминантный и дразнящий"
+    
     base_prompt = PERSONA + f"""
 Фетиши: {fetish_str}
+Уровень доминирования для инвайтов: {dominance_level}/10 ({dominance_desc})
 
-Используй релевантные хештеги из этого списка, когда нужно:
+Используй релевантные хештеги, когда нужно:
 {MY_HASHTAGS}
 
 Важно:
-- Делай контент в первую очередь под выбранные фетиши.
+- Контент в первую очередь под выбранные фетиши.
 - Не навязывай Findom автоматически.
-- Тексты должны быть наполненными, с смыслом, деталями и эмоциями.
-- Для аудио и видео скрипты должны быть достаточно длинными.
-- В видео и аудио перевод должен идти СРАЗУ после каждой английской части.
-- Для видео и аудио обязательно указывай примерную цену в зависимости от длительности и темы.
+- Тексты наполненные и с смыслом.
+- В видео, аудио и инвайтах перевод сразу после английского текста.
+- Инвайты — короткие, триггерные, флиртующие вопросы/фразы. Не шаблонные.
 
 Сгенерируй ТОЛЬКО запрошенные разделы:
 """
@@ -103,44 +105,39 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
     if gen_content:
         content_parts[0]["text"] += f"""
 ## ПОСТЫ
-Ровно {n_posts} постов.
-Английский текст, сразу под ним перевод.
-Кратко советы по фото (на русском).
+Ровно {n_posts} постов. Английский + сразу перевод. Советы по фото на русском.
 
 ## ВИДЕО
-Ровно {n_videos} видео.
-Название, описание, длительность примерно {video_minutes} минут.
-Сценарий от лица Kayomi к рабу. Интересный и чувственный.
-Пиши абзацами: английский текст, сразу под ним перевод.
-**Примерная цена:** укажи рекомендуемую цену (ориентир $3–6 за минуту, выше для жёстких/популярных фетишей вроде Findom, SPH, Trampling).
-**Советы по съёмке:** на русском.
-10 хештегов.
+Ровно {n_videos} видео (~{video_minutes} мин).
+Сценарий от Kayomi к рабу, абзацами: английский → сразу перевод.
+Примерная цена. Советы по съёмке на русском. 10 хештегов.
 
 ## АУДИО
-Ровно {n_audios} аудио.
-Название и описание.
-Длительность примерно {audio_minutes} минут.
-Скрипт наполненный под фетиш.
-Пиши абзацами: английский, сразу перевод.
-**Примерная цена:** укажи рекомендуемую цену (ориентир $2–5 за минуту, можно выше для сильного контроля/Findom/SPH).
-10 хештегов.
+Ровно {n_audios} аудио (~{audio_minutes} мин).
+Скрипт абзацами: английский → сразу перевод.
+Примерная цена. 10 хештегов.
 
 ## РАССЫЛКИ
-Сгенерируй ровно {n_mailing_days} отдельных рассылок с {{name}}.
-Английский + сразу перевод.
+Ровно {n_mailing_days} независимых рассылок с {{name}}. Английский + сразу перевод.
+"""
+    
+    if n_invites > 0:
+        content_parts[0]["text"] += f"""
+## ИНВАЙТЫ
+Сгенерируй ровно {n_invites} коротких инвайтов (триггерных фраз/вопросов для фанов).
+Стиль: флирт + лёгкое дразнение, в духе Kayomi. Уровень доминирования: {dominance_level}/10.
+Могут быть как мягкие («я промокла под дождём…»), так и более дерзкие.
+Каждый инвайт:
+**English:** короткая фраза
+**Перевод:** русский перевод
+Не делай их одинаковыми.
 """
     
     if gen_bundles:
         extra = f"\nДополнительно: {bundle_extra}" if bundle_extra.strip() else ""
         content_parts[0]["text"] += f"""
 ## БАНДЛЫ
-Ровно {n_bundles} бандлов.
-**Тема:**
-**Количество фото:**
-**Образы и позы:** (на русском)
-**Описание для продажи:**
-**Рекомендуемая цена:**
-**Хештеги:** 10
+Ровно {n_bundles} бандлов. Тема, количество фото, образы (на русском), описание, цена, 10 хештегов.
 {extra}
 """
     
@@ -148,30 +145,26 @@ def generate(period, n_posts, n_videos, n_audios, fetishes, n_mailing_days, vide
         extra = f"\nДополнительно: {sexting_extra}" if sexting_extra.strip() else ""
         content_parts[0]["text"] += f"""
 ## СЕКСТИНГ-ПАК
-На русском. Разбей на части с ценами.
+На русском, по частям с ценами.
 {extra}
 """
     
     if call_prompt.strip():
-        content_parts[0]["text"] += f"""
-## СЦЕНАРИЙ ЗВОНКА
-{call_prompt}
-Фраза на английском + сразу перевод.
-"""
+        content_parts[0]["text"] += f"\n## СЦЕНАРИЙ ЗВОНКА\n{call_prompt}\nФразы на английском + сразу перевод.\n"
     
     if photo_prompt.strip() or uploaded_image:
         photo_text = "\n## ПОСТ ПО ФОТО/ВИДЕО\n"
         if photo_prompt.strip():
             photo_text += f"{photo_prompt}\n"
         if uploaded_image:
-            photo_text += "Посмотри на фото.\n"
+            photo_text += "Посмотри на фото и напиши пост.\n"
         photo_text += "English + сразу перевод.\n"
         content_parts[0]["text"] += photo_text
         if uploaded_image:
-            base64_image = encode_image(uploaded_image)
-            content_parts.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
+            b64 = encode_image(uploaded_image)
+            content_parts.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
     
-    if not (gen_content or gen_bundles or gen_sexting or call_prompt.strip() or photo_prompt.strip() or uploaded_image):
+    if not any([gen_content, gen_bundles, gen_sexting, call_prompt.strip(), photo_prompt.strip(), uploaded_image, n_invites > 0]):
         return "Ничего не выбрано."
     
     try:
@@ -198,6 +191,9 @@ with col2:
     video_minutes = st.slider("Длит. видео (мин)", 1, 20, 5)
     audio_minutes = st.slider("Длит. аудио (мин)", 1, 15, 5)
     n_mailing_days = st.slider("Количество рассылок", 0, 14, 0)
+
+n_invites = st.slider("Количество инвайтов", 0, 15, 0)
+dominance_level = st.slider("Уровень доминирования в инвайтах", 1, 10, 5)
 
 period = st.selectbox("Период", ["1 день", "3 дня", "Неделя", "Месяц"])
 fetishes = st.multiselect("Фетиши", DEFAULT_FETISHES)
@@ -235,7 +231,7 @@ if st.button("🚀 Сгенерировать", type="primary", use_container_wi
             n_mailing_days, video_minutes, audio_minutes,
             gen_content, gen_bundles, gen_sexting, n_bundles,
             call_prompt, photo_prompt, uploaded_image,
-            bundle_extra, sexting_extra
+            bundle_extra, sexting_extra, n_invites, dominance_level
         )
 
 if st.session_state.result:
